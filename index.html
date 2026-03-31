@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>歴索（レキサク）— 歴史時代別 社会科見学スポット</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --ink:    #1c1a15;
+  --paper:  #f5f0e8;
+  --sepia:  #8b6f47;
+  --light:  #ede8dc;
+  --accent: #6b4c2a;
+  --gold:   #c9923a;
+  --muted:  #7a6e5f;
+  --white:  #fff;
+  --free-bg:#e8f5ee;
+  --free-tx:#2d7a4f;
+  --serif:  'Noto Serif JP', serif;
+  --sans:   'Noto Sans JP', sans-serif;
+  --radius: 10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh}
+
+/* ヘッダー */
+header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap}
+.site-name{font-family:var(--serif);font-size:1.5rem;font-weight:600;letter-spacing:.05em}
+.site-tagline{font-size:.75rem;color:var(--gold);letter-spacing:.08em}
+
+/* 時代タブ */
+.era-bar{background:var(--ink);border-top:1px solid #333;overflow-x:auto;scrollbar-width:none}
+.era-bar::-webkit-scrollbar{display:none}
+.era-tabs{display:flex;gap:0;padding:.25rem 1rem;min-width:max-content}
+.era-tab{font-family:var(--serif);font-size:.8rem;color:#999;padding:.5rem .75rem;border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;letter-spacing:.03em}
+.era-tab:hover{color:var(--paper)}
+.era-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* 時代メタ情報 */
+.era-meta{background:var(--light);border-bottom:1px solid #ddd6c8;padding:1rem 1.5rem}
+.era-meta-name{font-family:var(--serif);font-size:1.1rem;font-weight:600;margin-bottom:.2rem}
+.era-period{font-size:.75rem;color:var(--muted);margin-bottom:.5rem}
+.era-desc{font-size:.8rem;color:var(--accent);line-height:1.7;max-width:700px}
+
+/* フィルター行 */
+.filters{padding:.75rem 1.5rem;display:flex;gap:.5rem;flex-wrap:wrap;border-bottom:1px solid #ddd6c8;background:var(--white)}
+.filter-btn{font-size:.75rem;padding:.3rem .75rem;border-radius:20px;border:1px solid #ccc;background:transparent;color:var(--muted);cursor:pointer;font-family:var(--sans);transition:all .15s}
+.filter-btn:hover{border-color:var(--sepia);color:var(--ink)}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:var(--white)}
+.filter-sep{width:1px;background:#ddd;margin:.1rem 0;align-self:stretch}
+
+/* スポットグリッド */
+.main{padding:1.25rem 1.5rem}
+.spots-count{font-size:.75rem;color:var(--muted);margin-bottom:1rem}
+.spots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+
+/* スポットカード */
+.spot-card{background:var(--white);border:1px solid #e0d9cd;border-radius:var(--radius);padding:1rem;cursor:pointer;transition:border-color .15s,transform .1s;display:flex;flex-direction:column;gap:.5rem}
+.spot-card:hover{border-color:var(--sepia);transform:translateY(-1px)}
+.spot-pref{font-size:.7rem;color:var(--muted);letter-spacing:.05em}
+.spot-name{font-family:var(--serif);font-size:1rem;font-weight:600;color:var(--ink);line-height:1.4}
+.spot-desc{font-size:.78rem;color:var(--muted);line-height:1.6;flex:1}
+.spot-tags{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.25rem}
+.tag{font-size:.65rem;padding:.2rem .5rem;border-radius:4px;border:1px solid #e0d9cd;color:var(--muted)}
+.tag.free{background:var(--free-bg);border-color:#9edbb8;color:var(--free-tx)}
+.tag.reserve{background:#fff8ec;border-color:#f0c87a;color:#7a5a10}
+.spot-access{font-size:.7rem;color:var(--sepia);margin-top:.25rem;line-height:1.5}
+
+/* モーダル */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal{background:var(--white);border-radius:var(--radius);max-width:540px;width:100%;max-height:90vh;overflow-y:auto;padding:1.5rem;position:relative}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.2rem;color:var(--muted);cursor:pointer;line-height:1}
+.modal-pref{font-size:.75rem;color:var(--muted);margin-bottom:.25rem}
+.modal-name{font-family:var(--serif);font-size:1.4rem;font-weight:600;margin-bottom:.5rem;line-height:1.4}
+.modal-desc{font-size:.85rem;color:#444;line-height:1.8;margin-bottom:1rem}
+.modal-rows{display:flex;flex-direction:column;gap:.5rem;font-size:.8rem}
+.modal-row{display:flex;gap:.75rem}
+.modal-label{color:var(--muted);flex-shrink:0;width:70px}
+.modal-val{color:var(--ink);line-height:1.5}
+.modal-link{color:var(--gold);word-break:break-all}
+.modal-eras{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.75rem}
+.era-chip{font-size:.7rem;padding:.25rem .6rem;border-radius:20px;border:1px solid;font-family:var(--serif)}
+
+/* 空・ローディング */
+.state-msg{text-align:center;padding:3rem 1rem;color:var(--muted);font-size:.85rem}
+.loading-dots{display:inline-flex;gap:.3rem}
+.loading-dots span{width:6px;height:6px;border-radius:50%;background:var(--sepia);animation:bounce .8s infinite}
+.loading-dots span:nth-child(2){animation-delay:.15s}
+.loading-dots span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+
+/* フッター */
+footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-top:1px solid #ddd6c8;margin-top:2rem}
+
+@media(max-width:600px){
+  .main{padding:1rem}
+  .spots-grid{grid-template-columns:1fr}
+  header{padding:1rem}
+  .site-name{font-size:1.2rem}
+  .filters{padding:.5rem 1rem}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="site-name">歴索</div>
+  <div class="site-tagline">レキサク — 歴史時代別 社会科見学スポット 関東版</div>
+</header>
+
+<nav class="era-bar">
+  <div class="era-tabs" id="era-tabs"></div>
+</nav>
+
+<div class="era-meta" id="era-meta">
+  <div class="era-meta-name"></div>
+  <div class="era-period"></div>
+  <div class="era-desc"></div>
+</div>
+
+<div class="filters" id="filters">
+  <button class="filter-btn active" data-pref="">全地域</button>
+  <div class="filter-sep"></div>
+  <button class="filter-btn" data-pref="東京">東京</button>
+  <button class="filter-btn" data-pref="神奈川">神奈川</button>
+  <button class="filter-btn" data-pref="千葉">千葉</button>
+  <button class="filter-btn" data-pref="埼玉">埼玉</button>
+  <div class="filter-sep"></div>
+  <button class="filter-btn" id="free-only-btn" data-free="0">無料のみ</button>
+</div>
+
+<main class="main">
+  <div class="spots-count" id="spots-count"></div>
+  <div class="spots-grid" id="spots-grid">
+    <div class="state-msg"><div class="loading-dots"><span></span><span></span><span></span></div></div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal" id="modal-content">
+    <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">✕</button>
+    <div class="modal-pref" id="m-pref"></div>
+    <div class="modal-name" id="m-name"></div>
+    <div class="modal-desc" id="m-desc"></div>
+    <div class="modal-rows">
+      <div class="modal-row"><span class="modal-label">住所</span><span class="modal-val" id="m-addr"></span></div>
+      <div class="modal-row"><span class="modal-label">アクセス</span><span class="modal-val" id="m-access"></span></div>
+      <div class="modal-row"><span class="modal-label">開館時間</span><span class="modal-val" id="m-hours"></span></div>
+      <div class="modal-row"><span class="modal-label">入場料</span><span class="modal-val" id="m-fee"></span></div>
+      <div class="modal-row" id="m-url-row"><span class="modal-label">公式サイト</span><a class="modal-link modal-val" id="m-url" target="_blank" rel="noopener"></a></div>
+    </div>
+    <div class="modal-eras" id="m-eras"></div>
+  </div>
+</div>
+
+<footer>歴索（レキサク）&copy; 2025 — 関東エリア限定公開中 | 全国展開予定</footer>
+
+<script>
+const SUPABASE_URL  = 'https://sunxpjbdvidftukiutxg.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1bnhwamJkdmlkZnR1a2l1dHhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NTU1MDUsImV4cCI6MjA5MDEzMTUwNX0.L9RU4U3kWy4CJzyVR4FEKUrDX8fD2jzWAbQxyaDOIsU';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let eras        = [];
+let allSpots    = [];
+let spotEraMap  = {};   // spot_id -> [era codes]
+let spotTagMap  = {};   // spot_id -> [tag names]
+let currentEra  = null;
+let currentPref = '';
+let freeOnly    = false;
+
+async function init() {
+  // 時代マスター取得
+  const { data: eraData } = await db.from('eras').select('*').order('sort_order');
+  eras = eraData || [];
+  buildEraTabs();
+
+  // 全スポット取得（都道府県JOIN）
+  const { data: spotData } = await db
+    .from('spots')
+    .select('*, prefectures(name)')
+    .eq('status', true);
+  allSpots = spotData || [];
+
+  // spot_eras取得（時代コードも一緒に）
+  const { data: seData } = await db
+    .from('spot_eras')
+    .select('spot_id, eras(code, name_ja, color_hex)');
+  (seData || []).forEach(r => {
+    if (!spotEraMap[r.spot_id]) spotEraMap[r.spot_id] = [];
+    spotEraMap[r.spot_id].push(r.eras);
+  });
+
+  // spot_tags取得
+  const { data: stData } = await db
+    .from('spot_tags')
+    .select('spot_id, tags(name, category)');
+  (stData || []).forEach(r => {
+    if (!spotTagMap[r.spot_id]) spotTagMap[r.spot_id] = [];
+    spotTagMap[r.spot_id].push(r.tags.name);
+  });
+
+  // 最初の時代を選択
+  if (eras.length) selectEra(eras[0]);
+}
+
+function buildEraTabs() {
+  const container = document.getElementById('era-tabs');
+  eras.forEach(e => {
+    const btn = document.createElement('button');
+    btn.className = 'era-tab';
+    btn.textContent = e.name_ja;
+    btn.onclick = () => selectEra(e);
+    btn.id = 'era-tab-' + e.id;
+    container.appendChild(btn);
+  });
+}
+
+function selectEra(era) {
+  currentEra = era;
+  document.querySelectorAll('.era-tab').forEach(b => b.classList.remove('active'));
+  const tab = document.getElementById('era-tab-' + era.id);
+  if (tab) {
+    tab.classList.add('active');
+    tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+  // メタ情報更新
+  const meta = document.getElementById('era-meta');
+  meta.querySelector('.era-meta-name').textContent = era.name_ja + '時代';
+  meta.querySelector('.era-meta-name').style.color = era.color_hex || '#1c1a15';
+  meta.querySelector('.era-period').textContent = era.period;
+  meta.querySelector('.era-desc').textContent = era.description || '';
+  renderSpots();
+}
+
+function renderSpots() {
+  // 現在の時代に属するspot_idを抽出
+  const eraSpotIds = new Set(
+    Object.entries(spotEraMap)
+      .filter(([, eras]) => eras.some(e => e.code === currentEra.code))
+      .map(([id]) => id)
+  );
+  let filtered = allSpots.filter(s => eraSpotIds.has(s.id));
+  if (currentPref) filtered = filtered.filter(s => s.prefectures?.name === currentPref);
+  if (freeOnly)    filtered = filtered.filter(s => s.is_free);
+
+  const grid  = document.getElementById('spots-grid');
+  const count = document.getElementById('spots-count');
+  count.textContent = filtered.length + ' 件のスポット';
+
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="state-msg">このエリアのスポットは現在収集中です</div>';
+    return;
+  }
+  grid.innerHTML = '';
+  filtered.forEach(s => {
+    const tags  = spotTagMap[s.id] || [];
+    const card  = document.createElement('div');
+    card.className = 'spot-card';
+    card.onclick   = () => openModal(s);
+    const tagHtml = tags.map(t => {
+      let cls = 'tag';
+      if (t === '無料') cls += ' free';
+      if (t === '要予約') cls += ' reserve';
+      return `<span class="${cls}">${t}</span>`;
+    }).join('');
+    card.innerHTML = `
+      <div class="spot-pref">${s.prefectures?.name || ''}</div>
+      <div class="spot-name">${s.name}</div>
+      <div class="spot-desc">${(s.description || '').slice(0, 80)}${(s.description || '').length > 80 ? '…' : ''}</div>
+      <div class="spot-tags">${tagHtml}</div>
+      ${s.access_info ? `<div class="spot-access">${s.access_info}</div>` : ''}
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function openModal(s) {
+  const tags   = spotTagMap[s.id] || [];
+  const eras2  = spotEraMap[s.id] || [];
+  document.getElementById('m-pref').textContent   = s.prefectures?.name || '';
+  document.getElementById('m-name').textContent   = s.name;
+  document.getElementById('m-desc').textContent   = s.description || '';
+  document.getElementById('m-addr').textContent   = s.address || '—';
+  document.getElementById('m-access').textContent = s.access_info || '—';
+  document.getElementById('m-hours').textContent  = s.open_hours || '—';
+  document.getElementById('m-fee').textContent    = s.admission_fee || '—';
+  const urlEl  = document.getElementById('m-url');
+  const urlRow = document.getElementById('m-url-row');
+  if (s.website_url) {
+    urlEl.href = s.website_url;
+    urlEl.textContent = s.website_url;
+    urlRow.style.display = 'flex';
+  } else {
+    urlRow.style.display = 'none';
+  }
+  const erasEl = document.getElementById('m-eras');
+  erasEl.innerHTML = eras2.map(e =>
+    `<span class="era-chip" style="color:${e.color_hex};border-color:${e.color_hex}">${e.name_ja}時代</span>`
+  ).join('');
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('open');
+  }
+}
+
+// フィルター
+document.getElementById('filters').addEventListener('click', e => {
+  const btn = e.target.closest('.filter-btn');
+  if (!btn) return;
+  if (btn.id === 'free-only-btn') {
+    freeOnly = !freeOnly;
+    btn.classList.toggle('active', freeOnly);
+  } else if (btn.dataset.pref !== undefined) {
+    document.querySelectorAll('[data-pref]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentPref = btn.dataset.pref;
+  }
+  renderSpots();
+});
+
+init();
+</script>
+</body>
+</html>
