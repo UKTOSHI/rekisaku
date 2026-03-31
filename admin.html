@@ -1,305 +1,284 @@
 <!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>歴索 — スポット追加管理画面</title>
+<html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>歴索 管理画面</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--ink:#1c1a15;--paper:#f5f0e8;--light:#ede8dc;--accent:#6b4c2a;--gold:#c9923a;--muted:#7a6e5f;--white:#fff;--serif:'Noto Sans JP',sans-serif;--radius:10px;--ok:#1D9E75;--ng:#E24B4A}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--paper);color:var(--ink);font-family:var(--serif);min-height:100vh}
-header{background:var(--ink);color:var(--paper);padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem}
-.site-name{font-size:1.2rem;font-weight:500}
-.badge{font-size:.7rem;background:var(--gold);color:var(--ink);padding:2px 8px;border-radius:10px;font-weight:500}
-
-/* ロック画面 */
-#lock-screen{display:flex;align-items:center;justify-content:center;min-height:80vh}
-.lock-card{background:var(--white);border:1px solid #e0d9cd;border-radius:var(--radius);padding:2rem;width:320px;text-align:center}
-.lock-title{font-size:1rem;font-weight:500;margin-bottom:1.25rem;color:var(--accent)}
-.lock-input{width:100%;padding:.6rem .75rem;border:1px solid #ccc;border-radius:6px;font-size:.9rem;font-family:var(--serif);letter-spacing:.1em;margin-bottom:.75rem;background:var(--paper)}
-.lock-btn{width:100%;padding:.6rem;background:var(--ink);color:var(--paper);border:none;border-radius:6px;font-size:.9rem;cursor:pointer;font-family:var(--serif)}
+:root{--ink:#1c1a15;--paper:#f5f0e8;--accent:#6b4c2a;--gold:#c9923a;--muted:#7a6e5f;--white:#fff;--ok:#1D9E75;--ng:#E24B4A;--border:#e0d9cd;--r:10px;--f:'Noto Sans JP',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}body{background:var(--paper);color:var(--ink);font-family:var(--f);min-height:100vh}
+header{background:var(--ink);color:var(--paper);padding:.75rem 1.5rem;display:flex;align-items:center;gap:.75rem}
+.site-name{font-size:1.1rem;font-weight:500}.badge{font-size:.7rem;background:var(--gold);color:var(--ink);padding:2px 8px;border-radius:10px}
+#lock{display:flex;align-items:center;justify-content:center;min-height:85vh}
+.lock-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:2rem;width:300px;text-align:center}
+.lock-title{font-size:.9rem;font-weight:500;color:var(--accent);margin-bottom:1rem}
+.lock-input{width:100%;padding:.55rem .75rem;border:1px solid #ccc;border-radius:6px;font-size:.9rem;font-family:var(--f);margin-bottom:.75rem;background:var(--paper)}
+.lock-btn{width:100%;padding:.6rem;background:var(--ink);color:var(--paper);border:none;border-radius:6px;cursor:pointer;font-family:var(--f)}
 .lock-err{font-size:.75rem;color:var(--ng);margin-top:.5rem;display:none}
-
-/* メイン */
-#main{display:none;max-width:720px;margin:2rem auto;padding:0 1rem 3rem}
-.section{background:var(--white);border:1px solid #e0d9cd;border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem}
-.section-title{font-size:.85rem;font-weight:500;color:var(--accent);border-bottom:1px solid #e0d9cd;padding-bottom:.5rem;margin-bottom:1rem;letter-spacing:.05em}
+#main{display:none;max-width:900px;margin:1.5rem auto;padding:0 1rem 3rem}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.25rem}
+.tab{padding:.6rem 1.25rem;font-size:.85rem;border:none;background:transparent;cursor:pointer;color:var(--muted);font-family:var(--f);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:500}
+.toolbar{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.search-input{flex:1;min-width:160px;padding:.45rem .75rem;border:1px solid var(--border);border-radius:6px;font-size:.85rem;font-family:var(--f);background:var(--paper)}
+.toolbar select{padding:.45rem .75rem;border:1px solid var(--border);border-radius:6px;font-size:.85rem;font-family:var(--f);background:var(--paper)}
+.count-label{font-size:.75rem;color:var(--muted);margin-left:auto}
+.list-table{width:100%;border-collapse:collapse;font-size:.8rem;background:var(--white);border-radius:var(--r);overflow:hidden;border:1px solid var(--border)}
+.list-table th{padding:.6rem .75rem;text-align:left;background:var(--paper);color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)}
+.list-table td{padding:.6rem .75rem;border-bottom:1px solid #f0ebe2;vertical-align:middle}
+.list-table tr:last-child td{border-bottom:none}.list-table tr:hover td{background:#faf7f2}
+.era-chips{display:flex;flex-wrap:wrap;gap:3px}
+.era-chip{font-size:.65rem;padding:1px 6px;border-radius:10px;border:1px solid var(--border);color:var(--muted)}
+.free-tag{font-size:.65rem;background:#e8f5ee;color:#2d7a4f;padding:1px 6px;border-radius:10px}
+.tbl-btn{font-size:.72rem;padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;cursor:pointer;font-family:var(--f)}
+.tbl-btn.edit{color:#185FA5;border-color:#B5D4F4}.tbl-btn.del{color:var(--ng);border-color:#F7C1C1}
+.section{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;margin-bottom:1rem}
+.section-title{font-size:.82rem;font-weight:500;color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:.5rem;margin-bottom:1rem}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem}
-.form-row.single{grid-template-columns:1fr}
-.form-group{display:flex;flex-direction:column;gap:.3rem}
-label{font-size:.75rem;color:var(--muted);font-weight:500}
-input[type=text],input[type=url],input[type=number],textarea,select{padding:.5rem .75rem;border:1px solid #ccc;border-radius:6px;font-size:.85rem;font-family:var(--serif);background:var(--paper);color:var(--ink);width:100%}
-input:focus,textarea:focus,select:focus{outline:2px solid var(--gold);border-color:transparent}
+.form-row.single{grid-template-columns:1fr}.form-group{display:flex;flex-direction:column;gap:.3rem}
+label{font-size:.72rem;color:var(--muted);font-weight:500}
+input[type=text],input[type=url],input[type=number],textarea,select{padding:.5rem .75rem;border:1px solid #ccc;border-radius:6px;font-size:.83rem;font-family:var(--f);background:var(--paper);color:var(--ink);width:100%}
 textarea{resize:vertical;min-height:80px;line-height:1.6}
-.check-group{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.25rem}
+.check-group{display:flex;gap:1rem;margin-top:.25rem}
 .check-item{display:flex;align-items:center;gap:.4rem;font-size:.8rem;cursor:pointer}
-.check-item input{width:16px;height:16px;cursor:pointer;accent-color:var(--accent)}
-
-/* 時代・タグ選択 */
-.pill-group{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.25rem}
-.pill{font-size:.72rem;padding:.3rem .65rem;border-radius:20px;border:1px solid #ccc;cursor:pointer;background:transparent;color:var(--muted);font-family:var(--serif);transition:all .15s}
-.pill:hover{border-color:var(--accent)}
+.check-item input{width:16px;height:16px;accent-color:var(--accent)}
+.pill-group{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.25rem}
+.pill{font-size:.7rem;padding:.25rem .6rem;border-radius:20px;border:1px solid #ccc;cursor:pointer;background:transparent;color:var(--muted);font-family:var(--f)}
 .pill.selected{background:var(--accent);border-color:var(--accent);color:var(--white)}
-
-/* 送信 */
-.submit-area{text-align:center;margin-top:1.5rem}
-.submit-btn{padding:.7rem 2.5rem;background:var(--accent);color:var(--white);border:none;border-radius:6px;font-size:.95rem;font-weight:500;cursor:pointer;font-family:var(--serif);transition:opacity .15s}
-.submit-btn:hover{opacity:.85}
-.submit-btn:disabled{opacity:.5;cursor:not-allowed}
-
-/* トースト */
-#toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:var(--paper);padding:.75rem 1.5rem;border-radius:6px;font-size:.85rem;opacity:0;transition:all .3s;z-index:999;white-space:nowrap}
+.form-actions{display:flex;gap:.5rem;justify-content:center;margin-top:1.25rem}
+.btn-primary{padding:.6rem 2rem;background:var(--accent);color:var(--white);border:none;border-radius:6px;font-size:.9rem;font-weight:500;cursor:pointer;font-family:var(--f)}
+.btn-secondary{padding:.6rem 1.5rem;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;font-size:.9rem;cursor:pointer;font-family:var(--f)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.edit-banner{background:#EAF3DE;border:1px solid #97C459;border-radius:6px;padding:.6rem 1rem;font-size:.8rem;color:#27500A;margin-bottom:1rem;display:none;align-items:center;justify-content:space-between}
+#toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:var(--paper);padding:.7rem 1.5rem;border-radius:6px;font-size:.83rem;opacity:0;transition:all .3s;z-index:999;white-space:nowrap}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-#toast.ok{background:var(--ok)}
-#toast.ng{background:var(--ng)}
+#toast.ok{background:var(--ok)}#toast.ng{background:var(--ng)}
+.confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center}
+.confirm-overlay.open{display:flex}
+.confirm-box{background:var(--white);border-radius:var(--r);padding:1.5rem;width:340px;text-align:center}
+.confirm-title{font-size:.95rem;font-weight:500;margin-bottom:.5rem}
+.confirm-sub{font-size:.8rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.6}
+.confirm-btns{display:flex;gap:.5rem;justify-content:center}
+.btn-del-ok{padding:.55rem 1.5rem;background:var(--ng);color:var(--white);border:none;border-radius:6px;cursor:pointer;font-family:var(--f)}
+.btn-del-cancel{padding:.55rem 1.25rem;background:transparent;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-family:var(--f);color:var(--muted)}
 </style>
 </head>
 <body>
-
-<header>
-  <div class="site-name">歴索</div>
-  <div class="badge">管理画面</div>
-</header>
-
-<div id="lock-screen">
-  <div class="lock-card">
-    <div class="lock-title">管理者パスワードを入力</div>
-    <input type="password" id="pw-input" class="lock-input" placeholder="パスワード" onkeydown="if(event.key==='Enter')checkPw()">
-    <button class="lock-btn" onclick="checkPw()">ログイン</button>
-    <div class="lock-err" id="pw-err">パスワードが違います</div>
-  </div>
-</div>
-
+<header><div class="site-name">歴索</div><div class="badge">管理画面</div></header>
+<div id="lock"><div class="lock-card"><div class="lock-title">管理者パスワードを入力</div><input type="password" id="pw-input" class="lock-input" placeholder="パスワード" onkeydown="if(event.key==='Enter')checkPw()"><button class="lock-btn" onclick="checkPw()">ログイン</button><div class="lock-err" id="pw-err">パスワードが違います</div></div></div>
 <div id="main">
-  <div class="section">
-    <div class="section-title">基本情報</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>スポット名 *</label>
-        <input type="text" id="f-name" placeholder="例：鈴木遺跡">
-      </div>
-      <div class="form-group">
-        <label>よみがな</label>
-        <input type="text" id="f-kana" placeholder="例：すずきいせき">
-      </div>
-    </div>
-    <div class="form-row single">
-      <div class="form-group">
-        <label>説明文 *</label>
-        <textarea id="f-desc" placeholder="スポットの説明を入力してください"></textarea>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>都道府県 *</label>
-        <select id="f-pref"></select>
-      </div>
-      <div class="form-group">
-        <label>住所</label>
-        <input type="text" id="f-addr" placeholder="例：東京都小平市学園西町1丁目">
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>緯度</label>
-        <input type="number" id="f-lat" step="0.0001" placeholder="例：35.7267">
-      </div>
-      <div class="form-group">
-        <label>経度</label>
-        <input type="number" id="f-lng" step="0.0001" placeholder="例：139.4748">
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">訪問情報</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>開館時間・定休日</label>
-        <input type="text" id="f-hours" placeholder="例：9:00〜17:00（月曜休館）">
-      </div>
-      <div class="form-group">
-        <label>入場料</label>
-        <input type="text" id="f-fee" placeholder="例：大人300円・高校生以下無料">
-      </div>
-    </div>
-    <div class="form-row single">
-      <div class="form-group">
-        <label>アクセス情報</label>
-        <input type="text" id="f-access" placeholder="例：JR「大森」駅から徒歩5分">
-      </div>
-    </div>
-    <div class="form-row single">
-      <div class="form-group">
-        <label>公式サイトURL</label>
-        <input type="url" id="f-url" placeholder="https://...">
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>特徴</label>
-        <div class="check-group">
-          <label class="check-item"><input type="checkbox" id="f-free"> 入場無料</label>
-          <label class="check-item"><input type="checkbox" id="f-reserve"> 要予約</label>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">時代（複数選択可）*</div>
-    <div class="pill-group" id="era-pills"></div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">タグ（複数選択可）</div>
-    <div class="pill-group" id="tag-pills"></div>
-  </div>
-
-  <div class="submit-area">
-    <button class="submit-btn" id="submit-btn" onclick="submitSpot()">スポットを登録する</button>
-  </div>
+<div class="tabs"><button class="tab active" onclick="showTab('list')">スポット一覧</button><button class="tab" onclick="showTab('form')">新規追加</button></div>
+<div id="tab-list">
+<div class="toolbar"><input type="text" class="search-input" id="search-input" placeholder="スポット名で検索..." oninput="filterList()"><select id="filter-era" onchange="filterList()"><option value="">全時代</option></select><select id="filter-pref" onchange="filterList()"><option value="">全地域</option></select><span class="count-label" id="list-count"></span></div>
+<table class="list-table"><thead><tr><th>スポット名</th><th>都道府県</th><th>時代</th><th>無料</th><th>操作</th></tr></thead><tbody id="list-tbody"></tbody></table>
 </div>
-
+<div id="tab-form" style="display:none">
+<div class="edit-banner" id="edit-banner"><span id="edit-banner-name"></span><button class="btn-secondary" style="font-size:.75rem;padding:3px 10px" onclick="cancelEdit()">編集をキャンセル</button></div>
+<div class="section"><div class="section-title">基本情報</div>
+<div class="form-row"><div class="form-group"><label>スポット名 *</label><input type="text" id="f-name" placeholder="例：鈴木遺跡"></div><div class="form-group"><label>よみがな</label><input type="text" id="f-kana" placeholder="例：すずきいせき"></div></div>
+<div class="form-row single"><div class="form-group"><label>説明文 *</label><textarea id="f-desc" placeholder="スポットの説明を入力"></textarea></div></div>
+<div class="form-row"><div class="form-group"><label>都道府県 *</label><select id="f-pref"></select></div><div class="form-group"><label>住所</label><input type="text" id="f-addr" placeholder="例：東京都小平市学園西町1丁目"></div></div>
+<div class="form-row"><div class="form-group"><label>緯度</label><input type="number" id="f-lat" step="0.0001" placeholder="35.7267"></div><div class="form-group"><label>経度</label><input type="number" id="f-lng" step="0.0001" placeholder="139.4748"></div></div>
+</div>
+<div class="section"><div class="section-title">訪問情報</div>
+<div class="form-row"><div class="form-group"><label>開館時間・定休日</label><input type="text" id="f-hours" placeholder="例：9:00〜17:00（月曜休館）"></div><div class="form-group"><label>入場料</label><input type="text" id="f-fee" placeholder="例：大人300円"></div></div>
+<div class="form-row single"><div class="form-group"><label>アクセス情報</label><input type="text" id="f-access" placeholder="例：JR大森駅から徒歩5分"></div></div>
+<div class="form-row single"><div class="form-group"><label>公式サイトURL</label><input type="url" id="f-url" placeholder="https://..."></div></div>
+<div class="form-group"><label>特徴</label><div class="check-group"><label class="check-item"><input type="checkbox" id="f-free"> 入場無料</label><label class="check-item"><input type="checkbox" id="f-reserve"> 要予約</label><label class="check-item"><input type="checkbox" id="f-status" checked> 公開する</label></div></div>
+</div>
+<div class="section"><div class="section-title">時代（複数選択可）*</div><div class="pill-group" id="era-pills"></div></div>
+<div class="section"><div class="section-title">タグ（複数選択可）</div><div class="pill-group" id="tag-pills"></div></div>
+<div class="form-actions"><button class="btn-secondary" onclick="cancelEdit()">キャンセル</button><button class="btn-primary" id="submit-btn" onclick="submitSpot()">登録する</button></div>
+</div>
+</div>
+<div class="confirm-overlay" id="confirm-overlay"><div class="confirm-box"><div class="confirm-title">削除の確認</div><div class="confirm-sub" id="confirm-msg"></div><div class="confirm-btns"><button class="btn-del-cancel" onclick="document.getElementById('confirm-overlay').classList.remove('open')">キャンセル</button><button class="btn-del-ok" id="confirm-ok">削除する</button></div></div></div>
 <div id="toast"></div>
-
 <script>
-const SUPABASE_URL  = 'https://sunxpjbdvidftukiutxg.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1bnhwamJkdmlkZnR1a2l1dHhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NTU1MDUsImV4cCI6MjA5MDEzMTUwNX0.L9RU4U3kWy4CJzyVR4FEKUrDX8fD2jzWAbQxyaDOIsU';
-const ADMIN_PW      = 'rekisaku2025';
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-
-let eras=[], tags=[], prefs=[];
-let selectedEras=new Set(), selectedTags=new Set();
+const SUPABASE_URL='https://sunxpjbdvidftukiutxg.supabase.co';
+const SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1bnhwamJkdmlkZnR1a2l1dHhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NTU1MDUsImV4cCI6MjA5MDEzMTUwNX0.L9RU4U3kWy4CJzyVR4FEKUrDX8fD2jzWAbQxyaDOIsU';
+const ADMIN_PW='rekisaku2025';
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+let eras=[],tags=[],prefs=[],allSpots=[],spotEraMap={};
+let selectedEras=new Set(),selectedTags=new Set(),editingId=null;
 
 function checkPw(){
-  const v=document.getElementById('pw-input').value;
-  if(v===ADMIN_PW){
-    document.getElementById('lock-screen').style.display='none';
+  if(document.getElementById('pw-input').value===ADMIN_PW){
+    document.getElementById('lock').style.display='none';
     document.getElementById('main').style.display='block';
-    loadMasters();
-  } else {
-    document.getElementById('pw-err').style.display='block';
-  }
+    init();
+  } else { document.getElementById('pw-err').style.display='block'; }
 }
 
-async function loadMasters(){
-  const [e,t,p]=await Promise.all([
+async function init(){
+  const[e,t,p]=await Promise.all([
     db.from('eras').select('*').order('sort_order'),
     db.from('tags').select('*').order('name'),
-    db.from('prefectures').select('*').order('id'),
+    db.from('prefectures').select('*').order('id')
   ]);
   eras=e.data||[]; tags=t.data||[]; prefs=p.data||[];
+  buildFilters(); buildPills(); await loadSpots();
+}
 
-  // 都道府県select
-  const sel=document.getElementById('f-pref');
-  prefs.forEach(p=>{
-    const o=document.createElement('option');
-    o.value=p.id; o.textContent=p.name; sel.appendChild(o);
-  });
+function buildFilters(){
+  const fe=document.getElementById('filter-era');
+  eras.forEach(e=>{const o=document.createElement('option');o.value=e.id;o.textContent=e.name_ja;fe.appendChild(o);});
+  const fp=document.getElementById('filter-pref');
+  prefs.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;fp.appendChild(o);});
+  const fs=document.getElementById('f-pref');
+  prefs.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;fs.appendChild(o);});
+}
 
-  // 時代ピル
+function buildPills(){
   const ep=document.getElementById('era-pills');
   eras.forEach(e=>{
-    const b=document.createElement('button');
-    b.className='pill'; b.textContent=e.name_ja;
-    b.onclick=()=>{
-      if(selectedEras.has(e.id)){selectedEras.delete(e.id);b.classList.remove('selected');}
-      else{selectedEras.add(e.id);b.classList.add('selected');}
-    };
+    const b=document.createElement('button');b.className='pill';b.textContent=e.name_ja;b.dataset.id=e.id;
+    b.onclick=()=>{if(selectedEras.has(e.id)){selectedEras.delete(e.id);b.classList.remove('selected');}else{selectedEras.add(e.id);b.classList.add('selected');}};
     ep.appendChild(b);
   });
-
-  // タグピル
   const tp=document.getElementById('tag-pills');
   tags.forEach(t=>{
-    const b=document.createElement('button');
-    b.className='pill'; b.textContent=t.name;
-    b.onclick=()=>{
-      if(selectedTags.has(t.id)){selectedTags.delete(t.id);b.classList.remove('selected');}
-      else{selectedTags.add(t.id);b.classList.add('selected');}
-    };
+    const b=document.createElement('button');b.className='pill';b.textContent=t.name;b.dataset.id=t.id;
+    b.onclick=()=>{if(selectedTags.has(t.id)){selectedTags.delete(t.id);b.classList.remove('selected');}else{selectedTags.add(t.id);b.classList.add('selected');}};
     tp.appendChild(b);
   });
+}
+
+async function loadSpots(){
+  const[s,se]=await Promise.all([
+    db.from('spots').select('*,prefectures(name)').order('created_at',{ascending:false}),
+    db.from('spot_eras').select('spot_id,eras(id,name_ja)')
+  ]);
+  allSpots=s.data||[]; spotEraMap={};
+  (se.data||[]).forEach(r=>{if(!spotEraMap[r.spot_id])spotEraMap[r.spot_id]=[];spotEraMap[r.spot_id].push(r.eras);});
+  filterList();
+}
+
+function filterList(){
+  const q=document.getElementById('search-input').value.trim().toLowerCase();
+  const era=document.getElementById('filter-era').value;
+  const pref=document.getElementById('filter-pref').value;
+  const filtered=allSpots.filter(s=>{
+    if(q&&!s.name.toLowerCase().includes(q))return false;
+    if(pref&&String(s.prefecture_id)!==pref)return false;
+    if(era&&!(spotEraMap[s.id]||[]).some(e=>String(e.id)===era))return false;
+    return true;
+  });
+  document.getElementById('list-count').textContent=filtered.length+'件';
+  const tbody=document.getElementById('list-tbody');tbody.innerHTML='';
+  filtered.forEach(s=>{
+    const ec=(spotEraMap[s.id]||[]).map(e=>'<span class="era-chip">'+e.name_ja+'</span>').join('');
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td style="font-weight:500">'+s.name+'</td>'
+      +'<td>'+(s.prefectures?.name||'—')+'</td>'
+      +'<td><div class="era-chips">'+(ec||'—')+'</div></td>'
+      +'<td>'+(s.is_free?'<span class="free-tag">無料</span>':'')+'</td>'
+      +'<td style="white-space:nowrap;display:flex;gap:4px">'
+      +'<button class="tbl-btn edit" onclick="startEdit(\''+s.id+'\')">編集</button>'
+      +'<button class="tbl-btn del" onclick="confirmDelete(\''+s.id+'\',\''+s.name.replace(/'/g,"\\'")+'\')">削除</button></td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function showTab(t){
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',i===(t==='list'?0:1)));
+  document.getElementById('tab-list').style.display=t==='list'?'block':'none';
+  document.getElementById('tab-form').style.display=t==='form'?'block':'none';
+  if(t==='list')cancelEdit();
+}
+
+async function startEdit(id){
+  const spot=allSpots.find(s=>s.id===id);if(!spot)return;
+  editingId=id;
+  document.getElementById('f-name').value=spot.name||'';
+  document.getElementById('f-kana').value=spot.name_kana||'';
+  document.getElementById('f-desc').value=spot.description||'';
+  document.getElementById('f-addr').value=spot.address||'';
+  document.getElementById('f-lat').value=spot.latitude||'';
+  document.getElementById('f-lng').value=spot.longitude||'';
+  document.getElementById('f-hours').value=spot.open_hours||'';
+  document.getElementById('f-fee').value=spot.admission_fee||'';
+  document.getElementById('f-access').value=spot.access_info||'';
+  document.getElementById('f-url').value=spot.website_url||'';
+  document.getElementById('f-free').checked=!!spot.is_free;
+  document.getElementById('f-reserve').checked=!!spot.needs_reservation;
+  document.getElementById('f-status').checked=spot.status!==false;
+  document.getElementById('f-pref').value=spot.prefecture_id||'';
+  const eids=new Set((spotEraMap[id]||[]).map(e=>e.id));
+  selectedEras=new Set(eids);
+  document.querySelectorAll('#era-pills .pill').forEach(b=>b.classList.toggle('selected',eids.has(parseInt(b.dataset.id))));
+  const{data:sd}=await db.from('spot_tags').select('tag_id').eq('spot_id',id);
+  const tids=new Set((sd||[]).map(r=>r.tag_id));
+  selectedTags=new Set(tids);
+  document.querySelectorAll('#tag-pills .pill').forEach(b=>b.classList.toggle('selected',tids.has(parseInt(b.dataset.id))));
+  document.getElementById('edit-banner').style.display='flex';
+  document.getElementById('edit-banner-name').textContent='編集中：'+spot.name;
+  document.getElementById('submit-btn').textContent='更新する';
+  showTab('form');
+}
+
+function cancelEdit(){
+  editingId=null; resetForm();
+  document.getElementById('edit-banner').style.display='none';
+  document.getElementById('submit-btn').textContent='登録する';
 }
 
 async function submitSpot(){
   const name=document.getElementById('f-name').value.trim();
   const desc=document.getElementById('f-desc').value.trim();
-  const prefId=parseInt(document.getElementById('f-pref').value);
-
   if(!name){toast('スポット名を入力してください','ng');return;}
   if(!desc){toast('説明文を入力してください','ng');return;}
   if(!selectedEras.size){toast('時代を1つ以上選んでください','ng');return;}
-
   const btn=document.getElementById('submit-btn');
-  btn.disabled=true; btn.textContent='登録中...';
+  btn.disabled=true; btn.textContent=editingId?'更新中...':'登録中...';
+  const payload={
+    name, name_kana:document.getElementById('f-kana').value.trim()||null,
+    description:desc, address:document.getElementById('f-addr').value.trim()||null,
+    prefecture_id:parseInt(document.getElementById('f-pref').value),
+    latitude:parseFloat(document.getElementById('f-lat').value)||null,
+    longitude:parseFloat(document.getElementById('f-lng').value)||null,
+    is_free:document.getElementById('f-free').checked,
+    needs_reservation:document.getElementById('f-reserve').checked,
+    website_url:document.getElementById('f-url').value.trim()||null,
+    access_info:document.getElementById('f-access').value.trim()||null,
+    open_hours:document.getElementById('f-hours').value.trim()||null,
+    admission_fee:document.getElementById('f-fee').value.trim()||null,
+    status:document.getElementById('f-status').checked
+  };
+  try{
+    let sid=editingId;
+    if(editingId){const{error}=await db.from('spots').update(payload).eq('id',editingId);if(error)throw error;}
+    else{const{data,error}=await db.from('spots').insert(payload).select().single();if(error)throw error;sid=data.id;}
+    await db.from('spot_eras').delete().eq('spot_id',sid);
+    if(selectedEras.size)await db.from('spot_eras').insert([...selectedEras].map(era_id=>({spot_id:sid,era_id})));
+    await db.from('spot_tags').delete().eq('spot_id',sid);
+    if(selectedTags.size)await db.from('spot_tags').insert([...selectedTags].map(tag_id=>({spot_id:sid,tag_id})));
+    toast(editingId?'更新しました！':'登録しました！','ok');
+    cancelEdit(); await loadSpots(); showTab('list');
+  } catch(err){ toast('エラー: '+err.message,'ng'); }
+  finally{ btn.disabled=false; btn.textContent=editingId?'更新する':'登録する'; }
+}
 
-  try {
-    // spots挿入
-    const lat=document.getElementById('f-lat').value;
-    const lng=document.getElementById('f-lng').value;
-    const {data:spot,error:e1}=await db.from('spots').insert({
-      name,
-      name_kana: document.getElementById('f-kana').value.trim()||null,
-      description: desc,
-      address: document.getElementById('f-addr').value.trim()||null,
-      prefecture_id: prefId,
-      latitude:  lat?parseFloat(lat):null,
-      longitude: lng?parseFloat(lng):null,
-      is_free:   document.getElementById('f-free').checked,
-      needs_reservation: document.getElementById('f-reserve').checked,
-      website_url: document.getElementById('f-url').value.trim()||null,
-      access_info: document.getElementById('f-access').value.trim()||null,
-      open_hours:  document.getElementById('f-hours').value.trim()||null,
-      admission_fee: document.getElementById('f-fee').value.trim()||null,
-      status: true,
-    }).select().single();
-    if(e1) throw e1;
-
-    // 時代紐付け
-    if(selectedEras.size){
-      const eraRows=[...selectedEras].map(era_id=>({spot_id:spot.id,era_id}));
-      const {error:e2}=await db.from('spot_eras').insert(eraRows);
-      if(e2) throw e2;
-    }
-
-    // タグ紐付け
-    if(selectedTags.size){
-      // 無料・要予約チェックボックスとの重複を避ける
-      const tagRows=[...selectedTags].map(tag_id=>({spot_id:spot.id,tag_id}));
-      await db.from('spot_tags').insert(tagRows);
-    }
-
-    toast('登録しました！','ok');
-    resetForm();
-  } catch(err){
-    console.error(err);
-    toast('エラーが発生しました: '+err.message,'ng');
-  } finally {
-    btn.disabled=false; btn.textContent='スポットを登録する';
-  }
+function confirmDelete(id,name){
+  document.getElementById('confirm-msg').textContent='「'+name+'」を削除します。この操作は元に戻せません。';
+  document.getElementById('confirm-overlay').classList.add('open');
+  document.getElementById('confirm-ok').onclick=async()=>{
+    document.getElementById('confirm-overlay').classList.remove('open');
+    await db.from('spots').delete().eq('id',id);
+    toast('削除しました','ok'); await loadSpots();
+  };
 }
 
 function resetForm(){
-  ['f-name','f-kana','f-desc','f-addr','f-lat','f-lng',
-   'f-hours','f-fee','f-access','f-url'].forEach(id=>{
-    document.getElementById(id).value='';
-  });
+  ['f-name','f-kana','f-desc','f-addr','f-lat','f-lng','f-hours','f-fee','f-access','f-url'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-free').checked=false;
   document.getElementById('f-reserve').checked=false;
+  document.getElementById('f-status').checked=true;
   selectedEras.clear(); selectedTags.clear();
   document.querySelectorAll('.pill').forEach(p=>p.classList.remove('selected'));
 }
 
 function toast(msg,type='ok'){
   const el=document.getElementById('toast');
-  el.textContent=msg;
-  el.className='show '+(type==='ok'?'ok':'ng');
+  el.textContent=msg; el.className='show '+type;
   setTimeout(()=>el.className='',3000);
 }
 </script>
-</body>
-</html>
+</body></html>
