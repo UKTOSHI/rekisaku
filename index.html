@@ -68,6 +68,8 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 .stat-speed{display:flex;flex-direction:column;gap:.3rem;justify-content:center}
 .speed-val{font-size:1rem;font-weight:600;font-family:var(--serif);color:var(--accent);line-height:1.2}
 .speed-desc{font-size:.68rem;color:var(--muted);line-height:1.4;max-width:160px}
+.stat-industry{display:flex;flex-direction:column;gap:.3rem;justify-content:center}
+.industry-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:var(--ink);line-height:1.4}
 
 /* フィルター行 */
 .filters{padding:.75rem 1.5rem;display:flex;gap:.5rem;flex-wrap:wrap;border-bottom:1px solid #ddd6c8;background:var(--white)}
@@ -170,6 +172,10 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
       <div class="stat-pop-label">技術進化スピード</div>
       <div class="speed-val" id="speed-val"></div>
       <div class="speed-desc" id="speed-desc"></div>
+    </div>
+    <div class="stat-industry" id="stat-industry" style="display:none">
+      <div class="stat-pop-label">主要産業</div>
+      <div class="industry-val" id="industry-val"></div>
     </div>
   </div>
 
@@ -352,6 +358,14 @@ function selectEra(era) {
                   : 'この時代の1年は旧石器時代の ' + mul.toLocaleString() + ' 年分の進化に相当';
     } else {
       speedEl.style.display = 'none';
+    }
+    // 主要産業
+    const indEl = document.getElementById('stat-industry');
+    if (era.main_industries) {
+      indEl.style.display = 'flex';
+      document.getElementById('industry-val').textContent = era.main_industries;
+    } else {
+      indEl.style.display = 'none';
     }
   } else {
     statsEl.style.display = 'none';
