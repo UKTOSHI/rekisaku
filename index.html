@@ -58,7 +58,8 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 .stat-pop-label{font-size:.68rem;color:var(--muted)}
 .stat-pop-val{font-size:1.3rem;font-weight:600;font-family:var(--serif);color:var(--accent);line-height:1}
 .stat-pop-unit{font-size:.68rem;color:var(--muted)}
-.stat-chart{display:flex;flex-direction:column;align-items:center;gap:.3rem}
+.stat-life{display:flex;flex-direction:column;gap:.2rem;justify-content:center}
+.life-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:var(--accent);line-height:1.4}
 .stat-chart-label{font-size:.68rem;color:var(--muted)}
 .donut-wrap{position:relative;width:72px;height:72px}
 .donut-wrap canvas{position:absolute;top:0;left:0}
@@ -161,6 +162,10 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
     <div class="stat-pop">
       <div class="stat-pop-label">推定人口</div>
       <div><span class="stat-pop-val" id="stat-pop-val">—</span> <span class="stat-pop-unit">万人</span></div>
+    </div>
+    <div class="stat-life" id="stat-life" style="display:none">
+      <div class="stat-pop-label">平均寿命</div>
+      <div class="life-val" id="life-val"></div>
     </div>
     <div class="stat-chart">
       <div class="stat-chart-label">農業人口率</div>
@@ -350,6 +355,14 @@ function selectEra(era) {
         : era.population_man.toLocaleString();
     document.querySelector('.stat-pop-unit').textContent =
       era.population_man >= 10000 ? '人' : '万人';
+    // 平均寿命
+    const lifeEl = document.getElementById('stat-life');
+    if (era.life_expectancy) {
+      lifeEl.style.display = 'flex';
+      document.getElementById('life-val').textContent = era.life_expectancy;
+    } else {
+      lifeEl.style.display = 'none';
+    }
     // ドーナツグラフ
     const rate   = era.farming_rate ?? 0;
     document.getElementById('donut-pct').textContent = rate + '%';
