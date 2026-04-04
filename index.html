@@ -66,12 +66,14 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 .donut-pct{font-size:.85rem;font-weight:600;color:var(--accent)}
 .donut-sub{font-size:.55rem;color:var(--muted)}
 .stat-speed{display:flex;flex-direction:column;gap:.3rem;justify-content:center}
-.speed-val{font-size:1rem;font-weight:600;font-family:var(--serif);color:var(--accent);line-height:1.2}
+.speed-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:var(--accent);line-height:1.2}
 .speed-desc{font-size:.68rem;color:var(--muted);line-height:1.4;max-width:160px}
 .stat-industry{display:flex;flex-direction:column;gap:.3rem;justify-content:center}
 .industry-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:var(--ink);line-height:1.4}
 .stat-media{display:flex;flex-direction:column;gap:.3rem;justify-content:center}
 .media-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:var(--ink);line-height:1.4}
+.stat-gov{display:flex;flex-direction:column;gap:.3rem;justify-content:center}
+.gov-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:var(--ink);line-height:1.4}
 
 /* フィルター行 */
 .filters{padding:.75rem 1.5rem;display:flex;gap:.5rem;flex-wrap:wrap;border-bottom:1px solid #ddd6c8;background:var(--white)}
@@ -169,6 +171,10 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
           <div class="donut-sub">農業</div>
         </div>
       </div>
+    </div>
+    <div class="stat-gov" id="stat-gov" style="display:none">
+      <div class="stat-pop-label">国の体制</div>
+      <div class="gov-val" id="gov-val"></div>
     </div>
     <div class="stat-speed" id="stat-speed" style="display:none">
       <div class="stat-pop-label">技術進化スピード</div>
@@ -351,17 +357,11 @@ function selectEra(era) {
     // 進化スピード
     const speedEl = document.getElementById('stat-speed');
     const mul = era.speed_multiplier;
-    if (mul != null) {
+    const animal = era.speed_animal;
+    if (animal) {
       speedEl.style.display = 'flex';
-      const v = mul >= 10000
-        ? (mul / 10000).toFixed(1) + '万'
-        : mul >= 1000
-          ? (mul / 1000).toFixed(1) + '千'
-          : mul;
-      document.getElementById('speed-val').textContent = '旧石器時代の ' + v + ' 倍';
-      document.getElementById('speed-desc').textContent =
-        mul === 1 ? 'この時代の1年は旧石器時代の1年と同じ速度'
-                  : 'この時代の1年は旧石器時代の ' + mul.toLocaleString() + ' 年分の進化に相当';
+      document.getElementById('speed-val').textContent = animal;
+      document.getElementById('speed-desc').textContent = '';
     } else {
       speedEl.style.display = 'none';
     }
@@ -380,6 +380,14 @@ function selectEra(era) {
       document.getElementById('media-val').textContent = era.info_media;
     } else {
       mediaEl.style.display = 'none';
+    }
+    // 国の体制
+    const govEl = document.getElementById('stat-gov');
+    if (era.government_system) {
+      govEl.style.display = 'flex';
+      document.getElementById('gov-val').textContent = era.government_system;
+    } else {
+      govEl.style.display = 'none';
     }
   } else {
     statsEl.style.display = 'none';
