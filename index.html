@@ -65,6 +65,9 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 .donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;line-height:1.2}
 .donut-pct{font-size:.85rem;font-weight:600;color:var(--accent)}
 .donut-sub{font-size:.55rem;color:var(--muted)}
+.stat-speed{display:flex;flex-direction:column;gap:.3rem;justify-content:center}
+.speed-val{font-size:1rem;font-weight:600;font-family:var(--serif);color:var(--accent);line-height:1.2}
+.speed-desc{font-size:.68rem;color:var(--muted);line-height:1.4;max-width:160px}
 
 /* フィルター行 */
 .filters{padding:.75rem 1.5rem;display:flex;gap:.5rem;flex-wrap:wrap;border-bottom:1px solid #ddd6c8;background:var(--white)}
@@ -162,6 +165,11 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
           <div class="donut-sub">農業</div>
         </div>
       </div>
+    </div>
+    <div class="stat-speed" id="stat-speed" style="display:none">
+      <div class="stat-pop-label">技術進化スピード</div>
+      <div class="speed-val" id="speed-val"></div>
+      <div class="speed-desc" id="speed-desc"></div>
     </div>
   </div>
 
@@ -328,6 +336,23 @@ function selectEra(era) {
     const rate   = era.farming_rate ?? 0;
     document.getElementById('donut-pct').textContent = rate + '%';
     drawDonut(rate, era.color_hex || '#c9923a');
+    // 進化スピード
+    const speedEl = document.getElementById('stat-speed');
+    const mul = era.speed_multiplier;
+    if (mul != null) {
+      speedEl.style.display = 'flex';
+      const v = mul >= 10000
+        ? (mul / 10000).toFixed(1) + '万'
+        : mul >= 1000
+          ? (mul / 1000).toFixed(1) + '千'
+          : mul;
+      document.getElementById('speed-val').textContent = '旧石器時代の ' + v + ' 倍';
+      document.getElementById('speed-desc').textContent =
+        mul === 1 ? 'この時代の1年は旧石器時代の1年と同じ速度'
+                  : 'この時代の1年は旧石器時代の ' + mul.toLocaleString() + ' 年分の進化に相当';
+    } else {
+      speedEl.style.display = 'none';
+    }
   } else {
     statsEl.style.display = 'none';
   }
