@@ -52,6 +52,20 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 .score-badge{font-size:.67rem;padding:1px 7px;border-radius:10px;margin-left:.25rem;font-weight:500;background:#fef3cd;color:#856404;border:1px solid #f0d070}
 .era-tech{font-size:.78rem;color:var(--muted);line-height:1.7;max-width:700px;border-left:2px solid var(--gold);padding-left:.75rem;margin-top:.5rem}
 
+/* 人口・農業グラフ */
+.era-stats{display:flex;gap:1.5rem;align-items:flex-start;margin-top:.75rem;flex-wrap:wrap}
+.stat-pop{display:flex;flex-direction:column;gap:.2rem}
+.stat-pop-label{font-size:.68rem;color:var(--muted)}
+.stat-pop-val{font-size:1.3rem;font-weight:600;font-family:var(--serif);color:var(--accent);line-height:1}
+.stat-pop-unit{font-size:.68rem;color:var(--muted)}
+.stat-chart{display:flex;flex-direction:column;align-items:center;gap:.3rem}
+.stat-chart-label{font-size:.68rem;color:var(--muted)}
+.donut-wrap{position:relative;width:72px;height:72px}
+.donut-wrap canvas{position:absolute;top:0;left:0}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;line-height:1.2}
+.donut-pct{font-size:.85rem;font-weight:600;color:var(--accent)}
+.donut-sub{font-size:.55rem;color:var(--muted)}
+
 /* フィルター行 */
 .filters{padding:.75rem 1.5rem;display:flex;gap:.5rem;flex-wrap:wrap;border-bottom:1px solid #ddd6c8;background:var(--white)}
 .filter-btn{font-size:.75rem;padding:.3rem .75rem;border-radius:20px;border:1px solid #ccc;background:transparent;color:var(--muted);cursor:pointer;font-family:var(--sans);transition:all .15s}
@@ -134,7 +148,22 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
     <span class="score-badge" id="score-badge" style="display:none"></span>
   </div>
   <div class="era-tech" id="era-tech" style="display:none"></div>
-</div>
+  <div class="era-stats" id="era-stats" style="display:none">
+    <div class="stat-pop">
+      <div class="stat-pop-label">推定人口</div>
+      <div><span class="stat-pop-val" id="stat-pop-val">—</span> <span class="stat-pop-unit">万人</span></div>
+    </div>
+    <div class="stat-chart">
+      <div class="stat-chart-label">農業人口率</div>
+      <div class="donut-wrap">
+        <canvas id="donut-canvas" width="72" height="72"></canvas>
+        <div class="donut-center">
+          <div class="donut-pct" id="donut-pct">—</div>
+          <div class="donut-sub">農業</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <div class="filters" id="filters">
   <button class="filter-btn active" data-pref="">全地域</button>
@@ -284,6 +313,25 @@ function selectEra(era) {
     techEl.style.display  = 'none';
   }
 
+  // 人口・農業率グラフ
+  const statsEl = document.getElementById('era-stats');
+  if (era.population_man != null) {
+    statsEl.style.display = 'flex';
+    // 人口表示
+    document.getElementById('stat-pop-val').textContent =
+      era.population_man >= 10000
+        ? (era.population_man / 10000).toFixed(1) + '億'
+        : era.population_man.toLocaleString();
+    document.querySelector('.stat-pop-unit').textContent =
+      era.population_man >= 10000 ? '人' : '万人';
+    // ドーナツグラフ
+    const rate   = era.farming_rate ?? 0;
+    document.getElementById('donut-pct').textContent = rate + '%';
+    drawDonut(rate, era.color_hex || '#c9923a');
+  } else {
+    statsEl.style.display = 'none';
+  }
+
   renderSpots();
 }
 
@@ -375,6 +423,32 @@ document.getElementById('filters').addEventListener('click', e => {
   }
   renderSpots();
 });
+
+function drawDonut(rate, color) {
+  const canvas = document.getElementById('donut-canvas');
+  if (!canvas) return;
+  const ctx  = canvas.getContext('2d');
+  const cx   = 36, cy = 36, r = 28, inner = 18;
+  const start = -Math.PI / 2;
+  const end   = start + (rate / 100) * 2 * Math.PI;
+  ctx.clearRect(0, 0, 72, 72);
+  // 背景（非農業）
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.arc(cx, cy, inner, 0, 2 * Math.PI, true);
+  ctx.fillStyle = '#d9d2c5';
+  ctx.fill('evenodd');
+  // 農業部分
+  if (rate > 0) {
+    ctx.beginPath();
+    ctx.moveTo(cx + inner * Math.cos(start), cy + inner * Math.sin(start));
+    ctx.arc(cx, cy, r, start, end);
+    ctx.arc(cx, cy, inner, end, start, true);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+}
 
 init();
 </script>
