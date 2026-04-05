@@ -44,12 +44,13 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 .era-meta-name{font-family:var(--serif);font-size:1.1rem;font-weight:600;margin-bottom:.2rem}
 .era-period{font-size:.75rem;color:var(--muted);margin-bottom:.6rem}
 .era-desc{font-size:.8rem;color:var(--accent);line-height:1.7;max-width:700px;margin-bottom:.75rem}
-.score-wrap{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;max-width:560px}
-.score-label{font-size:.7rem;color:var(--muted);white-space:nowrap;min-width:72px}
-.score-track{flex:1;height:8px;background:#d9d2c5;border-radius:4px;overflow:hidden}
-.score-fill{height:100%;border-radius:4px;transition:width .5s ease}
-.score-num{font-size:.75rem;font-weight:600;min-width:32px;text-align:right}
-.score-badge{font-size:.67rem;padding:1px 7px;border-radius:10px;margin-left:.25rem;font-weight:500;background:#fef3cd;color:#856404;border:1px solid #f0d070}
+.score-wrap{display:flex;align-items:center;gap:1rem;margin-bottom:.5rem}
+.score-donut-wrap{position:relative;width:72px;height:72px;flex-shrink:0}
+.score-donut-wrap canvas{position:absolute;top:0;left:0}
+.score-donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;line-height:1.2}
+.score-donut-pct{font-size:.85rem;font-weight:600;color:var(--accent)}
+.score-donut-sub{font-size:.55rem;color:var(--muted)}
+.score-badge{font-size:.67rem;padding:1px 7px;border-radius:10px;font-weight:500;background:#fef3cd;color:#856404;border:1px solid #f0d070}
 .era-tech{font-size:.78rem;color:var(--muted);line-height:1.7;max-width:700px;border-left:2px solid var(--gold);padding-left:.75rem;margin-top:.5rem}
 
 /* 人口・農業グラフ */
@@ -161,12 +162,7 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
   <div class="era-meta-name"></div>
   <div class="era-period"></div>
   <div class="era-desc"></div>
-  <div class="score-wrap" id="score-wrap" style="display:none">
-    <span class="score-label">人力依存度</span>
-    <div class="score-track"><div class="score-fill" id="score-fill"></div></div>
-    <span class="score-num" id="score-num"></span>
-    <span class="score-badge" id="score-badge" style="display:none"></span>
-  </div>
+  <div id="score-badge-wrap" style="display:none;margin-bottom:.5rem"><span class="score-badge" id="score-badge"></span></div>
   <div class="era-tech" id="era-tech" style="display:none"></div>
   <div class="era-stats" id="era-stats" style="display:none">
     <div class="stat-pop">
@@ -176,6 +172,18 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
     <div class="stat-life" id="stat-life" style="display:none">
       <div class="stat-pop-label">平均寿命</div>
       <div class="life-val" id="life-val"></div>
+    </div>
+    <div id="score-wrap" style="display:none">
+      <div class="stat-chart">
+        <div class="stat-chart-label">人力依存率</div>
+        <div class="score-donut-wrap">
+          <canvas id="score-donut-canvas" width="72" height="72"></canvas>
+          <div class="score-donut-center">
+            <div class="score-donut-pct" id="score-num"></div>
+            <div class="score-donut-sub">人力</div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="stat-chart">
       <div class="stat-chart-label">農業人口率</div>
@@ -318,28 +326,25 @@ function selectEra(era) {
   meta.querySelector('.era-period').textContent = era.period;
   meta.querySelector('.era-desc').textContent = era.description || '';
 
-  // 人力依存度スコアバー
+  // 人力依存率ドーナツグラフ
   const score = era.human_labor_score;
   const scoreWrap = document.getElementById('score-wrap');
   if (score != null) {
     scoreWrap.style.display = 'flex';
-    const fill   = document.getElementById('score-fill');
-    const num    = document.getElementById('score-num');
-    const badge  = document.getElementById('score-badge');
-    // 色：スコアが高い(人力多)→茶、低い(機械化)→青
-    const hue    = Math.round(score * 0.3 + 10); // 10(青)〜40(茶)
-    const color  = score > 60 ? '#8b6f47' : score > 45 ? '#c9923a' : '#2d6fa8';
-    fill.style.width  = score + '%';
-    fill.style.background = color;
-    num.textContent   = score;
-    num.style.color   = color;
+    const color = score > 60 ? '#8b6f47' : score > 45 ? '#c9923a' : '#2d6fa8';
+    const num = document.getElementById('score-num');
+    num.textContent = score + '%';
+    num.style.color = color;
+    drawDonut(score, color, 'score-donut-canvas');
     // 革命バッジ
     const revolutions = {meiji:'★第1革命 蒸気・電気', showa_mid:'★第2革命 三種の神器', heisei:'★第3革命 インターネット'};
+    const badge = document.getElementById('score-badge');
+    const badgeWrap = document.getElementById('score-badge-wrap');
     if (revolutions[era.code]) {
       badge.textContent    = revolutions[era.code];
-      badge.style.display  = 'inline';
+      badgeWrap.style.display = 'block';
     } else {
-      badge.style.display  = 'none';
+      badgeWrap.style.display = 'none';
     }
   } else {
     scoreWrap.style.display = 'none';
@@ -376,7 +381,7 @@ function selectEra(era) {
     // ドーナツグラフ
     const rate   = era.farming_rate ?? 0;
     document.getElementById('donut-pct').textContent = rate + '%';
-    drawDonut(rate, era.color_hex || '#c9923a');
+    drawDonut(rate, era.color_hex || '#c9923a', 'donut-canvas');
     // 進化スピード
     const speedEl = document.getElementById('stat-speed');
     const mul = era.speed_multiplier;
@@ -512,21 +517,19 @@ document.getElementById('filters').addEventListener('click', e => {
   renderSpots();
 });
 
-function drawDonut(rate, color) {
-  const canvas = document.getElementById('donut-canvas');
+function drawDonut(rate, color, canvasId) {
+  const canvas = document.getElementById(canvasId || 'donut-canvas');
   if (!canvas) return;
   const ctx  = canvas.getContext('2d');
   const cx   = 36, cy = 36, r = 28, inner = 18;
   const start = -Math.PI / 2;
   const end   = start + (rate / 100) * 2 * Math.PI;
   ctx.clearRect(0, 0, 72, 72);
-  // 背景（非農業）
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, 2 * Math.PI);
   ctx.arc(cx, cy, inner, 0, 2 * Math.PI, true);
   ctx.fillStyle = '#d9d2c5';
   ctx.fill('evenodd');
-  // 農業部分
   if (rate > 0) {
     ctx.beginPath();
     ctx.moveTo(cx + inner * Math.cos(start), cy + inner * Math.sin(start));
