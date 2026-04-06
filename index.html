@@ -59,8 +59,11 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 .stat-pop-label{font-size:.68rem;color:var(--muted);text-align:center}
 .stat-pop-val{font-size:1.3rem;font-weight:600;font-family:var(--serif);color:var(--accent);line-height:1;text-align:center}
 .stat-pop-unit{font-size:.68rem;color:var(--muted);text-align:center}
-.stat-life{display:flex;flex-direction:column;gap:.2rem;align-items:center}
+.stat-age{display:flex;flex-direction:column;gap:.2rem;align-items:center}
+.age-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:var(--accent);line-height:1.4;text-align:center}
 .life-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:var(--accent);line-height:1.4;text-align:center}
+.stat-avgage{display:flex;flex-direction:column;gap:.2rem;align-items:center}
+.avgage-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:var(--accent);line-height:1.4;text-align:center}
 .stat-chart-label{font-size:.68rem;color:var(--muted);text-align:center}
 .donut-wrap{position:relative;width:72px;height:72px}
 .donut-wrap canvas{position:absolute;top:0;left:0}
@@ -168,6 +171,10 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
     <div class="stat-pop">
       <div class="stat-pop-label">推定人口</div>
       <div style="text-align:center"><span class="stat-pop-val" id="stat-pop-val">—</span> <span class="stat-pop-unit">万人</span></div>
+    </div>
+    <div class="stat-avgage" id="stat-avgage" style="display:none">
+      <div class="stat-pop-label">平均年齢</div>
+      <div class="avgage-val" id="avgage-val"></div>
     </div>
     <div class="stat-life" id="stat-life" style="display:none">
       <div class="stat-pop-label">平均寿命</div>
@@ -377,6 +384,14 @@ function selectEra(era) {
       document.getElementById('life-val').textContent = era.life_expectancy;
     } else {
       lifeEl.style.display = 'none';
+    }
+    // 平均年齢
+    const avgAgeEl = document.getElementById('stat-avgage');
+    if (era.avg_age != null) {
+      avgAgeEl.style.display = 'flex';
+      document.getElementById('avgage-val').textContent = '約' + era.avg_age + '歳';
+    } else {
+      avgAgeEl.style.display = 'none';
     }
     // ドーナツグラフ
     const rate   = era.farming_rate ?? 0;
