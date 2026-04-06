@@ -80,9 +80,7 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 .stat-gov{display:flex;flex-direction:column;gap:.3rem;align-items:center}
 .gov-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:var(--accent);line-height:1.4;text-align:center}
 
-/* ★修正: 平均寿命を単独で2行目に */
-#stat-life{flex-basis:100%;flex-direction:row;gap:.5rem;align-items:center;justify-content:flex-start}
-#stat-life .stat-pop-label{width:auto;margin-right:.25rem}
+.stat-life{display:flex;flex-direction:column;gap:.2rem;align-items:center}
 
 /* フィルター行 */
 .filters{padding:.75rem 1.5rem;display:flex;gap:.5rem;flex-wrap:wrap;border-bottom:1px solid #ddd6c8;background:var(--white)}
@@ -179,6 +177,11 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
       <div class="stat-pop-label">平均年齢</div>
       <div class="avgage-val" id="avgage-val"></div>
     </div>
+    <!-- ★平均寿命：平均年齢の右隣 -->
+    <div class="stat-life" id="stat-life" style="display:none">
+      <div class="stat-pop-label">平均寿命</div>
+      <div class="life-val" id="life-val"></div>
+    </div>
     <div id="score-wrap" style="display:none">
       <div class="stat-chart">
         <div class="stat-chart-label">人力依存率</div>
@@ -217,11 +220,6 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
     <div class="stat-media" id="stat-media" style="display:none">
       <div class="stat-pop-label">情報の主体</div>
       <div class="media-val" id="media-val"></div>
-    </div>
-    <!-- ★修正: 平均寿命を最後に配置して flex-basis:100% で独立行に -->
-    <div class="stat-life" id="stat-life" style="display:none">
-      <div class="stat-pop-label">平均寿命</div>
-      <div class="life-val" id="life-val"></div>
     </div>
   </div>
 </div>
@@ -372,10 +370,14 @@ function selectEra(era) {
     document.querySelector('.stat-pop-unit').textContent =
       era.population_man >= 10000 ? '人' : '万人';
 
-    // 平均寿命（2行目に表示）
+    // 平均寿命（平均年齢の右隣）
     const lifeEl = document.getElementById('stat-life');
     if (era.life_expectancy) {
       lifeEl.style.display = 'flex';
+      lifeEl.style.flexBasis = '';
+      lifeEl.style.flexDirection = 'column';
+      lifeEl.style.alignItems = 'center';
+      lifeEl.style.gap = '0.2rem';
       document.getElementById('life-val').textContent = era.life_expectancy;
     } else {
       lifeEl.style.display = 'none';
