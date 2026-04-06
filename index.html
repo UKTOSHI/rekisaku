@@ -6,9 +6,7 @@
 <title>歴索（レキサク）— 歴史時代別 社会科見学スポット</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-#stat-life { flex-basis: 100%; }  
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --ink:    #1c1a15;
@@ -81,7 +79,10 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 .media-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:var(--accent);line-height:1.4;text-align:center}
 .stat-gov{display:flex;flex-direction:column;gap:.3rem;align-items:center}
 .gov-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:var(--accent);line-height:1.4;text-align:center}
-.stat-pop-label,.stat-chart-label,.stat-speed .stat-pop-label,.stat-industry .stat-pop-label,.stat-media .stat-pop-label,.stat-gov .stat-pop-label,.stat-life .stat-pop-label{text-align:center}
+
+/* ★修正: 平均寿命を単独で2行目に */
+#stat-life{flex-basis:100%;flex-direction:row;gap:.5rem;align-items:center;justify-content:flex-start}
+#stat-life .stat-pop-label{width:auto;margin-right:.25rem}
 
 /* フィルター行 */
 .filters{padding:.75rem 1.5rem;display:flex;gap:.5rem;flex-wrap:wrap;border-bottom:1px solid #ddd6c8;background:var(--white)}
@@ -178,10 +179,6 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
       <div class="stat-pop-label">平均年齢</div>
       <div class="avgage-val" id="avgage-val"></div>
     </div>
-    <div class="stat-life" id="stat-life" style="display:none">
-      <div class="stat-pop-label">平均寿命</div>
-      <div class="life-val" id="life-val"></div>
-    </div>
     <div id="score-wrap" style="display:none">
       <div class="stat-chart">
         <div class="stat-chart-label">人力依存率</div>
@@ -221,7 +218,13 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
       <div class="stat-pop-label">情報の主体</div>
       <div class="media-val" id="media-val"></div>
     </div>
+    <!-- ★修正: 平均寿命を最後に配置して flex-basis:100% で独立行に -->
+    <div class="stat-life" id="stat-life" style="display:none">
+      <div class="stat-pop-label">平均寿命</div>
+      <div class="life-val" id="life-val"></div>
+    </div>
   </div>
+</div>
 
 <div class="filters" id="filters">
   <button class="filter-btn active" data-pref="">全地域</button>
@@ -267,26 +270,23 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 let eras        = [];
 let allSpots    = [];
-let spotEraMap  = {};   // spot_id -> [era codes]
-let spotTagMap  = {};   // spot_id -> [tag names]
+let spotEraMap  = {};
+let spotTagMap  = {};
 let currentEra  = null;
 let currentPref = '';
 let freeOnly    = false;
 
 async function init() {
-  // 時代マスター取得
   const { data: eraData } = await db.from('eras').select('*').order('sort_order');
   eras = eraData || [];
   buildEraTabs();
 
-  // 全スポット取得（都道府県JOIN）
   const { data: spotData } = await db
     .from('spots')
     .select('*, prefectures(name)')
     .eq('status', true);
   allSpots = spotData || [];
 
-  // spot_eras取得（時代コードも一緒に）
   const { data: seData } = await db
     .from('spot_eras')
     .select('spot_id, eras(code, name_ja, color_hex)');
@@ -295,7 +295,6 @@ async function init() {
     spotEraMap[r.spot_id].push(r.eras);
   });
 
-  // spot_tags取得
   const { data: stData } = await db
     .from('spot_tags')
     .select('spot_id, tags(name, category)');
@@ -304,7 +303,6 @@ async function init() {
     spotTagMap[r.spot_id].push(r.tags.name);
   });
 
-  // 最初の時代を選択
   if (eras.length) selectEra(eras[0]);
 }
 
@@ -328,14 +326,12 @@ function selectEra(era) {
     tab.classList.add('active');
     tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }
-  // 基本メタ情報
   const meta = document.getElementById('era-meta');
   meta.querySelector('.era-meta-name').textContent = era.name_ja + '時代';
   meta.querySelector('.era-meta-name').style.color = era.color_hex || '#1c1a15';
   meta.querySelector('.era-period').textContent = era.period;
   meta.querySelector('.era-desc').textContent = era.description || '';
 
-  // 人力依存率ドーナツグラフ
   const score = era.human_labor_score;
   const scoreWrap = document.getElementById('score-wrap');
   if (score != null) {
@@ -345,7 +341,6 @@ function selectEra(era) {
     num.textContent = score + '%';
     num.style.color = color;
     drawDonut(score, color, 'score-donut-canvas');
-    // 革命バッジ
     const revolutions = {meiji:'★第1革命 蒸気・電気', showa_mid:'★第2革命 三種の神器', heisei:'★第3革命 インターネット'};
     const badge = document.getElementById('score-badge');
     const badgeWrap = document.getElementById('score-badge-wrap');
@@ -359,7 +354,6 @@ function selectEra(era) {
     scoreWrap.style.display = 'none';
   }
 
-  // テクノロジー説明
   const techEl = document.getElementById('era-tech');
   if (era.technology) {
     techEl.textContent    = era.technology;
@@ -368,18 +362,17 @@ function selectEra(era) {
     techEl.style.display  = 'none';
   }
 
-  // 人口・農業率グラフ
   const statsEl = document.getElementById('era-stats');
   if (era.population_man != null) {
     statsEl.style.display = 'flex';
-    // 人口表示
     document.getElementById('stat-pop-val').textContent =
       era.population_man >= 10000
         ? (era.population_man / 10000).toFixed(1) + '億'
         : era.population_man.toLocaleString();
     document.querySelector('.stat-pop-unit').textContent =
       era.population_man >= 10000 ? '人' : '万人';
-    // 平均寿命
+
+    // 平均寿命（2行目に表示）
     const lifeEl = document.getElementById('stat-life');
     if (era.life_expectancy) {
       lifeEl.style.display = 'flex';
@@ -387,7 +380,7 @@ function selectEra(era) {
     } else {
       lifeEl.style.display = 'none';
     }
-    // 平均年齢
+
     const avgAgeEl = document.getElementById('stat-avgage');
     if (era.avg_age != null) {
       avgAgeEl.style.display = 'flex';
@@ -395,13 +388,12 @@ function selectEra(era) {
     } else {
       avgAgeEl.style.display = 'none';
     }
-    // ドーナツグラフ
+
     const rate   = era.farming_rate ?? 0;
     document.getElementById('donut-pct').textContent = rate + '%';
     drawDonut(rate, era.color_hex || '#c9923a', 'donut-canvas');
-    // 進化スピード
+
     const speedEl = document.getElementById('stat-speed');
-    const mul = era.speed_multiplier;
     const animal = era.speed_animal;
     if (animal) {
       speedEl.style.display = 'flex';
@@ -410,7 +402,7 @@ function selectEra(era) {
     } else {
       speedEl.style.display = 'none';
     }
-    // 主要産業
+
     const indEl = document.getElementById('stat-industry');
     if (era.main_industries) {
       indEl.style.display = 'flex';
@@ -418,7 +410,7 @@ function selectEra(era) {
     } else {
       indEl.style.display = 'none';
     }
-    // 情報の主体
+
     const mediaEl = document.getElementById('stat-media');
     if (era.info_media) {
       mediaEl.style.display = 'flex';
@@ -426,7 +418,7 @@ function selectEra(era) {
     } else {
       mediaEl.style.display = 'none';
     }
-    // 国の体制
+
     const govEl = document.getElementById('stat-gov');
     if (era.government_system) {
       govEl.style.display = 'flex';
@@ -442,7 +434,6 @@ function selectEra(era) {
 }
 
 function renderSpots() {
-  // 現在の時代に属するspot_idを抽出
   const eraSpotIds = new Set(
     Object.entries(spotEraMap)
       .filter(([, eras]) => eras.some(e => e.code === currentEra.code))
@@ -461,7 +452,6 @@ function renderSpots() {
     return;
   }
   grid.innerHTML = '';
-  // ☆5を先頭に
   filtered.sort((a, b) => (b.star_rating || 3) - (a.star_rating || 3));
   filtered.forEach(s => {
     const tags  = spotTagMap[s.id] || [];
@@ -519,7 +509,6 @@ function closeModal(e) {
   }
 }
 
-// フィルター
 document.getElementById('filters').addEventListener('click', e => {
   const btn = e.target.closest('.filter-btn');
   if (!btn) return;
