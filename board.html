@@ -1,1 +1,362 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>メンバー掲示板 — サークルアスト</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --ink:    #1c1a15;
+  --paper:  #f5f0e8;
+  --sepia:  #8b6f47;
+  --light:  #ede8dc;
+  --accent: #6b4c2a;
+  --gold:   #c9923a;
+  --muted:  #7a6e5f;
+  --white:  #fff;
+  --serif:  'Noto Serif JP', serif;
+  --sans:   'Noto Sans JP', sans-serif;
+  --radius: 10px;
+  --green:  #2d7a4f;
+  --green-bg: #e8f5ee;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh}
 
+/* ヘッダー */
+header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.header-left{display:flex;align-items:baseline;gap:1rem}
+.site-name{font-family:var(--serif);font-size:1.5rem;font-weight:600;letter-spacing:.05em}
+.site-tagline{font-size:.75rem;color:var(--gold);letter-spacing:.08em}
+.header-home{font-size:.75rem;color:#aaa;text-decoration:none;padding:.3rem .75rem;border:1px solid #555;border-radius:20px;transition:color .15s,border-color .15s}
+.header-home:hover{color:var(--paper);border-color:#999}
+
+/* カテゴリバー */
+.cat-bar{background:var(--ink);border-top:1px solid #333;overflow-x:auto;scrollbar-width:none}
+.cat-bar::-webkit-scrollbar{display:none}
+.cat-tabs{display:flex;padding:.25rem 1rem;min-width:max-content;gap:0}
+.cat-tab{font-size:.8rem;color:#999;padding:.5rem .75rem;border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s}
+.cat-tab:hover{color:var(--paper)}
+.cat-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* メインレイアウト */
+.layout{display:grid;grid-template-columns:1fr 320px;gap:1.5rem;padding:1.5rem;max-width:1100px;margin:0 auto}
+
+/* 投稿フォーム */
+.post-form{background:var(--white);border:1px solid #e0d9cd;border-radius:var(--radius);padding:1.25rem;margin-bottom:1.25rem}
+.form-title{font-family:var(--serif);font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--accent)}
+.form-row{display:flex;gap:.75rem;margin-bottom:.75rem;flex-wrap:wrap}
+.form-group{display:flex;flex-direction:column;gap:.3rem;flex:1;min-width:140px}
+.form-label{font-size:.72rem;color:var(--muted)}
+.form-input{padding:.5rem .75rem;border:1px solid #ddd6c8;border-radius:6px;font-family:var(--sans);font-size:.85rem;color:var(--ink);background:var(--paper);transition:border-color .15s}
+.form-input:focus{outline:none;border-color:var(--sepia)}
+.form-textarea{padding:.6rem .75rem;border:1px solid #ddd6c8;border-radius:6px;font-family:var(--sans);font-size:.85rem;color:var(--ink);background:var(--paper);resize:vertical;min-height:80px;width:100%;transition:border-color .15s}
+.form-textarea:focus{outline:none;border-color:var(--sepia)}
+.form-select{padding:.5rem .75rem;border:1px solid #ddd6c8;border-radius:6px;font-family:var(--sans);font-size:.85rem;color:var(--ink);background:var(--paper);cursor:pointer}
+.form-actions{display:flex;gap:.75rem;align-items:center;margin-top:.75rem}
+.btn-post{background:var(--accent);color:var(--white);border:none;padding:.55rem 1.5rem;border-radius:6px;font-family:var(--sans);font-size:.85rem;cursor:pointer;transition:background .15s}
+.btn-post:hover{background:#8b6035}
+.btn-post:disabled{background:#bbb;cursor:not-allowed}
+.lock-notice{font-size:.72rem;color:var(--muted)}
+.error-msg{font-size:.75rem;color:#c0392b;margin-top:.5rem}
+.success-msg{font-size:.75rem;color:var(--green);margin-top:.5rem}
+
+/* 合言葉モーダル */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--white);border-radius:var(--radius);width:100%;max-width:360px;padding:1.75rem;position:relative}
+.modal-title{font-family:var(--serif);font-size:1.1rem;font-weight:600;margin-bottom:.4rem;color:var(--accent)}
+.modal-desc{font-size:.78rem;color:var(--muted);margin-bottom:1rem;line-height:1.7}
+.modal-input{width:100%;padding:.6rem .75rem;border:1px solid #ddd6c8;border-radius:6px;font-family:var(--sans);font-size:.95rem;letter-spacing:.1em;margin-bottom:.75rem}
+.modal-input:focus{outline:none;border-color:var(--sepia)}
+.modal-btns{display:flex;gap:.5rem}
+.btn-confirm{background:var(--accent);color:var(--white);border:none;padding:.55rem 1.25rem;border-radius:6px;font-family:var(--sans);font-size:.85rem;cursor:pointer;flex:1}
+.btn-cancel{background:transparent;color:var(--muted);border:1px solid #ccc;padding:.55rem 1rem;border-radius:6px;font-family:var(--sans);font-size:.85rem;cursor:pointer}
+.modal-error{font-size:.75rem;color:#c0392b;margin-bottom:.5rem}
+
+/* 投稿一覧 */
+.posts-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+.posts-count{font-size:.75rem;color:var(--muted)}
+.posts-list{display:flex;flex-direction:column;gap:.75rem}
+.post-card{background:var(--white);border:1px solid #e0d9cd;border-radius:var(--radius);padding:1rem}
+.post-meta{display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;flex-wrap:wrap}
+.post-nick{font-size:.82rem;font-weight:500;color:var(--accent)}
+.post-cat{font-size:.65rem;padding:.15rem .5rem;border-radius:4px;background:var(--light);border:1px solid #ddd6c8;color:var(--muted)}
+.post-cat.cat-event{background:#fff8ec;border-color:#f0c87a;color:#7a5a10}
+.post-cat.cat-info{background:#e8f0fe;border-color:#a8c0f0;color:#2a4a8a}
+.post-cat.cat-spot{background:var(--green-bg);border-color:#9edbb8;color:var(--green)}
+.post-time{font-size:.68rem;color:#aaa;margin-left:auto}
+.post-body{font-size:.85rem;color:#333;line-height:1.75;white-space:pre-wrap}
+
+/* サイドバー */
+.sidebar{}
+.side-section{background:var(--white);border:1px solid #e0d9cd;border-radius:var(--radius);padding:1rem;margin-bottom:1rem}
+.side-title{font-family:var(--serif);font-size:.9rem;font-weight:600;color:var(--accent);margin-bottom:.75rem;border-bottom:1px solid #e0d9cd;padding-bottom:.5rem}
+.side-rule{font-size:.78rem;color:#555;line-height:1.8}
+.side-rule li{margin-left:1rem;margin-bottom:.25rem}
+.upcoming-list{display:flex;flex-direction:column;gap:.5rem}
+.upcoming-item{font-size:.78rem;line-height:1.6}
+.upcoming-date{font-size:.7rem;color:var(--gold);font-weight:500}
+.upcoming-name{color:var(--ink)}
+.unlock-btn{display:flex;align-items:center;gap:.5rem;font-size:.78rem;cursor:pointer;padding:.4rem .75rem;border-radius:6px;border:1px solid #ddd;background:transparent;color:var(--muted);width:100%;transition:all .15s}
+.unlock-btn:hover{border-color:var(--sepia);color:var(--ink)}
+.unlock-btn.unlocked{background:var(--green-bg);border-color:#9edbb8;color:var(--green)}
+.unlock-icon{font-size:1rem}
+
+/* ローディング */
+.state-msg{text-align:center;padding:2rem;color:var(--muted);font-size:.85rem}
+.loading-dots{display:inline-flex;gap:.3rem}
+.loading-dots span{width:6px;height:6px;border-radius:50%;background:var(--sepia);animation:bounce .8s infinite}
+.loading-dots span:nth-child(2){animation-delay:.15s}
+.loading-dots span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+
+footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-top:1px solid #ddd6c8;margin-top:1rem}
+
+@media(max-width:700px){
+  .layout{grid-template-columns:1fr;padding:1rem}
+  .sidebar{display:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="site-name">掲示板</div>
+    <div class="site-tagline">サークルアスト メンバー専用</div>
+  </div>
+  <a href="index.html" class="header-home">← トップへ</a>
+</header>
+
+<nav class="cat-bar">
+  <div class="cat-tabs">
+    <button class="cat-tab active" data-cat="">すべて</button>
+    <button class="cat-tab" data-cat="自己紹介">自己紹介</button>
+    <button class="cat-tab" data-cat="リクエスト">リクエスト</button>
+    <button class="cat-tab" data-cat="フリー">フリー</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <div class="main-col">
+    <!-- 投稿フォーム -->
+    <div class="post-form">
+      <div class="form-title">✏️ 投稿する</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ニックネーム</label>
+          <input class="form-input" id="f-nick" type="text" placeholder="例：トシ" maxlength="20">
+        </div>
+        <div class="form-group">
+          <label class="form-label">カテゴリ</label>
+          <select class="form-select" id="f-cat">
+            <option value="自己紹介">自己紹介</option>
+            <option value="リクエスト">リクエスト</option>
+            <option value="フリー">フリー</option>
+          </select>
+        </div>
+      </div>
+      <textarea class="form-textarea" id="f-body" placeholder="メッセージを入力（500文字まで）" maxlength="500"></textarea>
+      <div class="form-actions">
+        <button class="btn-post" id="btn-post" onclick="handlePost()">投稿する</button>
+        <span class="lock-notice" id="lock-notice">🔒 投稿には合言葉が必要です</span>
+      </div>
+      <div class="error-msg" id="form-error" style="display:none"></div>
+      <div class="success-msg" id="form-success" style="display:none"></div>
+    </div>
+
+    <!-- 投稿一覧 -->
+    <div class="posts-header">
+      <div class="posts-count" id="posts-count"></div>
+    </div>
+    <div class="posts-list" id="posts-list">
+      <div class="state-msg"><div class="loading-dots"><span></span><span></span><span></span></div></div>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="side-section">
+      <div class="side-title">🔑 メンバー認証</div>
+      <button class="unlock-btn" id="unlock-btn" onclick="openModal()">
+        <span class="unlock-icon">🔒</span>
+        <span id="unlock-label">合言葉を入力して投稿解除</span>
+      </button>
+    </div>
+
+
+    <div class="side-section">
+      <div class="side-title">📌 ルール</div>
+      <div class="side-rule">
+        <ul>
+          <li>メンバー同士の交流の場です</li>
+          <li>個人情報の書き込みはNG</li>
+          <li>誹謗中傷は禁止です</li>
+          <li>投稿は管理者が削除できます</li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- 合言葉モーダル -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-title">🔑 合言葉を入力</div>
+    <div class="modal-desc">サークルアストメンバーへ共有された合言葉を入力してください。合言葉はLINEグループでご確認ください。</div>
+    <input class="modal-input" id="modal-input" type="password" placeholder="合言葉">
+    <div class="modal-error" id="modal-error" style="display:none">合言葉が違います</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="btn-confirm" onclick="checkPassword()">認証する</button>
+    </div>
+  </div>
+</div>
+
+<footer>&copy; 2026 サークルアスト</footer>
+
+<script>
+const SUPABASE_URL  = 'https://sunxpjbdvidftukiutxg.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1bnhwamJkdmlkZnR1a2l1dHhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NTU1MDUsImV4cCI6MjA5MDEzMTUwNX0.L9RU4U3kWy4CJzyVR4FEKUrDX8fD2jzWAbQxyaDOIsU';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ★ここを変更して合言葉を設定
+const SECRET = 'ASST2024';
+
+let unlocked   = false;
+let currentCat = '';
+
+// セッションに合言葉状態を保持
+if (sessionStorage.getItem('board_unlocked') === '1') setUnlocked();
+
+async function loadPosts() {
+  let q = db.from('board_posts').select('*').order('created_at', { ascending: false }).limit(100);
+  if (currentCat) q = q.eq('category', currentCat);
+  const { data, error } = await q;
+  renderPosts(data || []);
+}
+
+function renderPosts(posts) {
+  const list = document.getElementById('posts-list');
+  document.getElementById('posts-count').textContent = posts.length + ' 件の投稿';
+  if (!posts.length) {
+    list.innerHTML = '<div class="state-msg">まだ投稿がありません。最初の一言をどうぞ！</div>';
+    return;
+  }
+  list.innerHTML = '';
+  posts.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'post-card';
+    const catClass = {
+      'リクエスト': 'cat-event',
+      'フリー':     'cat-info',
+      '自己紹介':   'cat-spot'
+    }[p.category] || '';
+    const dt = new Date(p.created_at);
+    const timeStr = dt.toLocaleDateString('ja-JP', {month:'numeric',day:'numeric'})
+      + ' ' + dt.toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'});
+    card.innerHTML = `
+      <div class="post-meta">
+        <span class="post-nick">${escHtml(p.nickname)}</span>
+        <span class="post-cat ${catClass}">${escHtml(p.category)}</span>
+        <span class="post-time">${timeStr}</span>
+      </div>
+      <div class="post-body">${escHtml(p.body)}</div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+async function handlePost() {
+  if (!unlocked) { openModal(); return; }
+  const nick = document.getElementById('f-nick').value.trim();
+  const cat  = document.getElementById('f-cat').value;
+  const body = document.getElementById('f-body').value.trim();
+  const errEl = document.getElementById('form-error');
+  const sucEl = document.getElementById('form-success');
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+  if (!nick) { showError('ニックネームを入力してください'); return; }
+  if (!body) { showError('メッセージを入力してください'); return; }
+  const btn = document.getElementById('btn-post');
+  btn.disabled = true;
+  btn.textContent = '投稿中…';
+  const { error } = await db.from('board_posts').insert({ nickname: nick, category: cat, body });
+  btn.disabled = false;
+  btn.textContent = '投稿する';
+  if (error) { showError('投稿に失敗しました。もう一度お試しください。'); return; }
+  document.getElementById('f-body').value = '';
+  sucEl.textContent = '投稿しました！';
+  sucEl.style.display = 'block';
+  setTimeout(() => sucEl.style.display = 'none', 3000);
+  loadPosts();
+}
+
+function showError(msg) {
+  const el = document.getElementById('form-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function openModal() {
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('modal-input').value = '';
+  document.getElementById('modal-error').style.display = 'none';
+  setTimeout(() => document.getElementById('modal-input').focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function checkPassword() {
+  const val = document.getElementById('modal-input').value;
+  if (val === SECRET) {
+    sessionStorage.setItem('board_unlocked', '1');
+    setUnlocked();
+    closeModal();
+  } else {
+    document.getElementById('modal-error').style.display = 'block';
+  }
+}
+
+function setUnlocked() {
+  unlocked = true;
+  document.getElementById('lock-notice').textContent = '✅ 投稿解除済み';
+  const btn = document.getElementById('unlock-btn');
+  btn.classList.add('unlocked');
+  document.querySelector('.unlock-icon').textContent = '🔓';
+  document.getElementById('unlock-label').textContent = '認証済み — 投稿できます';
+}
+
+// カテゴリフィルター
+document.querySelector('.cat-tabs').addEventListener('click', e => {
+  const tab = e.target.closest('.cat-tab');
+  if (!tab) return;
+  document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+  tab.classList.add('active');
+  currentCat = tab.dataset.cat;
+  loadPosts();
+});
+
+// Enterキーで認証
+document.getElementById('modal-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkPassword();
+});
+
+// モーダル外クリックで閉じる
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal();
+});
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+loadPosts();
+</script>
+</body>
+</html>
