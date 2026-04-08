@@ -107,6 +107,7 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 .tag{font-size:.65rem;padding:.2rem .5rem;border-radius:4px;border:1px solid #e0d9cd;color:var(--muted)}
 .tag.free{background:var(--free-bg);border-color:#9edbb8;color:var(--free-tx)}
 .tag.reserve{background:#fff8ec;border-color:#f0c87a;color:#7a5a10}
+.tag.recommend{background:#fef0f0;border-color:#f0a0a0;color:#a03030}
 .spot-access{font-size:.7rem;color:var(--sepia);margin-top:.25rem;line-height:1.5}
 .spot-stars{font-size:.72rem;letter-spacing:-.05em;margin-left:.3rem}
 .spot-stars[data-rating="5"]{color:var(--gold)}
@@ -464,6 +465,7 @@ function renderSpots() {
       let cls = 'tag';
       if (t === '無料') cls += ' free';
       if (t === '要予約') cls += ' reserve';
+      if (t === 'おすすめ') cls += ' recommend';
       return `<span class="${cls}">${t}</span>`;
     }).join('');
     const stars = s.star_rating || 3;
