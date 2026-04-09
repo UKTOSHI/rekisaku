@@ -140,6 +140,7 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 /* スポットカード */
 .spot-card{background:var(--white);border:1px solid #e0d9cd;border-radius:var(--radius);padding:1rem;cursor:pointer;transition:border-color .15s,transform .1s;display:flex;flex-direction:column;gap:.5rem}
 .spot-card:hover{border-color:var(--sepia);transform:translateY(-1px)}
+.spot-card.recommend .spot-name{color:#2a72b5}
 .spot-stars{font-size:.75rem;line-height:1;letter-spacing:.05em}
 .star-filled{color:var(--gold)}
 .star-empty{display:none}
@@ -155,9 +156,7 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 .tag.infra{background:#f0ebe0;border-color:#c9b48a;color:#6b4c2a;font-weight:500}
 .spot-access{font-size:.7rem;color:var(--sepia);margin-top:.25rem;line-height:1.5}
 .spot-stars{font-size:.72rem;letter-spacing:-.05em;margin-left:.3rem}
-.spot-stars[data-rating="5"]{color:var(--gold)}
-.spot-stars[data-rating="4"]{color:#b8882a}
-.spot-stars[data-rating="3"]{color:#a09080}
+.spot-stars[data-rating="3"]{color:var(--gold)}
 .spot-stars[data-rating="2"]{color:#c0b8b0}
 .spot-stars[data-rating="1"]{color:#d0ccc8}
 
@@ -545,7 +544,8 @@ function renderSpots() {
   filtered.forEach(s => {
     const tags  = spotTagMap[s.id] || [];
     const card  = document.createElement('div');
-    card.className = 'spot-card';
+    const isRecommend = tags.includes('おすすめ');
+    card.className = 'spot-card' + (isRecommend ? ' recommend' : '');
     card.onclick   = () => openModal(s);
     const tagHtml = tags.map(t => {
       let cls = 'tag';
@@ -554,8 +554,8 @@ function renderSpots() {
       if (t === 'おすすめ') cls += ' recommend';
       return `<span class="${cls}">${t}</span>`;
     }).join('');
-    const stars = s.star_rating || 3;
-    const starHtml = '<span class="star-filled">' + '★'.repeat(stars) + '</span><span class="star-empty">' + '☆'.repeat(5 - stars) + '</span>';
+    const stars = Math.min(s.star_rating || 3, 3);  // MAX3
+    const starHtml = '<span class="star-filled">' + '★'.repeat(stars) + '</span><span class="star-empty">' + '☆'.repeat(3 - stars) + '</span>';
 
     // ★ 令和のとき、インフラ分類タグをカードに追加
     const infraTagHtml = (currentEra?.code === 'gendai' && s.infra_category)
