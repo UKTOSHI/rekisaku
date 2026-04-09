@@ -52,8 +52,6 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 .score-donut-sub{font-size:.55rem;color:var(--muted)}
 .score-badge{font-size:.67rem;padding:1px 7px;border-radius:10px;font-weight:500;background:#fef3cd;color:#856404;border:1px solid #f0d070}
 .era-tech{font-size:.78rem;color:var(--muted);line-height:1.7;max-width:700px;border-left:2px solid var(--gold);padding-left:.75rem;margin-top:.5rem}
-
-/* 人口・農業グラフ */
 .era-stats{display:flex;gap:1.5rem;align-items:flex-start;margin-top:.75rem;flex-wrap:wrap}
 .stat-pop{display:flex;flex-direction:column;gap:.2rem;align-items:center}
 .stat-pop-label{font-size:.68rem;color:var(--muted);text-align:center}
@@ -79,7 +77,6 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 .media-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:var(--accent);line-height:1.4;text-align:center}
 .stat-gov{display:flex;flex-direction:column;gap:.3rem;align-items:center}
 .gov-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:var(--accent);line-height:1.4;text-align:center}
-
 .stat-life{display:flex;flex-direction:column;gap:.2rem;align-items:center}
 
 /* フィルター行 */
@@ -88,6 +85,52 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 .filter-btn:hover{border-color:var(--sepia);color:var(--ink)}
 .filter-btn.active{background:var(--accent);border-color:var(--accent);color:var(--white)}
 .filter-sep{width:1px;background:#ddd;margin:.1rem 0;align-self:stretch}
+
+/* ★ インフラ分類フィルター（令和のみ表示） */
+.infra-filter-bar{
+  padding:.6rem 1.5rem;
+  background:#f8f4ee;
+  border-bottom:1px solid #ddd6c8;
+  display:none;
+  flex-direction:column;
+  gap:.5rem;
+}
+.infra-filter-bar.visible{display:flex}
+.infra-filter-label{
+  font-size:.7rem;
+  color:var(--muted);
+  font-weight:500;
+  letter-spacing:.05em;
+  display:flex;
+  align-items:center;
+  gap:.4rem;
+}
+.infra-filter-label::before{
+  content:'';
+  display:inline-block;
+  width:3px;height:12px;
+  background:var(--gold);
+  border-radius:2px;
+}
+.infra-btns{display:flex;gap:.4rem;flex-wrap:wrap}
+.infra-btn{
+  font-size:.72rem;
+  padding:.3rem .7rem;
+  border-radius:20px;
+  border:1px solid #d4c9b8;
+  background:var(--white);
+  color:var(--muted);
+  cursor:pointer;
+  font-family:var(--sans);
+  transition:all .15s;
+  white-space:nowrap;
+}
+.infra-btn:hover{border-color:var(--sepia);color:var(--ink)}
+.infra-btn.active{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:var(--white);
+}
 
 /* スポットグリッド */
 .main{padding:1.25rem 1.5rem}
@@ -108,6 +151,8 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 .tag.free{background:var(--free-bg);border-color:#9edbb8;color:var(--free-tx)}
 .tag.reserve{background:#fff8ec;border-color:#f0c87a;color:#7a5a10}
 .tag.recommend{background:#fef0f0;border-color:#f0a0a0;color:#a03030}
+/* ★ インフラカテゴリタグ（カードに表示） */
+.tag.infra{background:#f0ebe0;border-color:#c9b48a;color:#6b4c2a;font-weight:500}
 .spot-access{font-size:.7rem;color:var(--sepia);margin-top:.25rem;line-height:1.5}
 .spot-stars{font-size:.72rem;letter-spacing:-.05em;margin-left:.3rem}
 .spot-stars[data-rating="5"]{color:var(--gold)}
@@ -149,6 +194,7 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
   header{padding:1rem}
   .site-name{font-size:1.2rem}
   .filters{padding:.5rem 1rem}
+  .infra-filter-bar{padding:.5rem 1rem}
 }
 </style>
 </head>
@@ -178,7 +224,6 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
       <div class="stat-pop-label">平均年齢</div>
       <div class="avgage-val" id="avgage-val"></div>
     </div>
-    <!-- ★平均寿命：平均年齢の右隣 -->
     <div class="stat-life" id="stat-life" style="display:none">
       <div class="stat-pop-label">平均寿命</div>
       <div class="life-val" id="life-val"></div>
@@ -225,6 +270,7 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
   </div>
 </div>
 
+<!-- 地域・無料フィルター -->
 <div class="filters" id="filters">
   <button class="filter-btn active" data-pref="">全地域</button>
   <div class="filter-sep"></div>
@@ -234,6 +280,22 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
   <button class="filter-btn" data-pref="埼玉">埼玉</button>
   <div class="filter-sep"></div>
   <button class="filter-btn" id="free-only-btn" data-free="0">無料のみ</button>
+</div>
+
+<!-- ★ 社会インフラ分類フィルター（令和選択時のみ表示） -->
+<div class="infra-filter-bar" id="infra-filter-bar">
+  <div class="infra-filter-label">社会インフラ分類</div>
+  <div class="infra-btns" id="infra-btns">
+    <button class="infra-btn active" data-infra="">すべて</button>
+    <button class="infra-btn" data-infra="エネルギー供給">⚡ エネルギー</button>
+    <button class="infra-btn" data-infra="水・衛生">💧 水・衛生</button>
+    <button class="infra-btn" data-infra="交通・物流">🚢 交通・物流</button>
+    <button class="infra-btn" data-infra="情報・通信">📡 情報・通信</button>
+    <button class="infra-btn" data-infra="科学・宇宙">🔭 科学・宇宙</button>
+    <button class="infra-btn" data-infra="金融・行政">🏛 金融・行政</button>
+    <button class="infra-btn" data-infra="安全・防災">🚒 安全・防災</button>
+    <button class="infra-btn" data-infra="産業・製造">🏭 産業・製造</button>
+  </div>
 </div>
 
 <main class="main">
@@ -279,6 +341,7 @@ let spotTagMap  = {};
 let currentEra  = null;
 let currentPref = '';
 let freeOnly    = false;
+let selectedInfra = '';  // ★ インフラ分類フィルター
 
 async function init() {
   const { data: eraData } = await db.from('eras').select('*').order('sort_order');
@@ -287,7 +350,7 @@ async function init() {
 
   const { data: spotData } = await db
     .from('spots')
-    .select('*, prefectures(name)')
+    .select('*, prefectures(name), infra_category')  // ★ infra_category追加
     .eq('status', true);
   allSpots = spotData || [];
 
@@ -330,6 +393,19 @@ function selectEra(era) {
     tab.classList.add('active');
     tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }
+
+  // ★ 令和のときだけインフラフィルターバーを表示、それ以外は非表示＆リセット
+  const infraBar = document.getElementById('infra-filter-bar');
+  if (era.code === 'gendai') {
+    infraBar.classList.add('visible');
+  } else {
+    infraBar.classList.remove('visible');
+    selectedInfra = '';
+    document.querySelectorAll('.infra-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.infra === '');
+    });
+  }
+
   const meta = document.getElementById('era-meta');
   meta.querySelector('.era-meta-name').textContent = era.name_ja + '時代';
   meta.querySelector('.era-meta-name').style.color = era.color_hex || '#1c1a15';
@@ -376,7 +452,6 @@ function selectEra(era) {
     document.querySelector('.stat-pop-unit').textContent =
       era.population_man >= 10000 ? '人' : '万人';
 
-    // 平均寿命（平均年齢の右隣）
     const lifeEl = document.getElementById('stat-life');
     if (era.life_expectancy) {
       lifeEl.style.display = 'flex';
@@ -451,6 +526,11 @@ function renderSpots() {
   if (currentPref) filtered = filtered.filter(s => s.prefectures?.name === currentPref);
   if (freeOnly)    filtered = filtered.filter(s => s.is_free);
 
+  // ★ インフラ分類フィルター（令和のみ有効）
+  if (currentEra?.code === 'gendai' && selectedInfra) {
+    filtered = filtered.filter(s => s.infra_category === selectedInfra);
+  }
+
   const grid  = document.getElementById('spots-grid');
   const count = document.getElementById('spots-count');
   count.textContent = filtered.length + ' 件のスポット';
@@ -475,11 +555,17 @@ function renderSpots() {
     }).join('');
     const stars = s.star_rating || 3;
     const starHtml = '<span class="star-filled">' + '★'.repeat(stars) + '</span><span class="star-empty">' + '☆'.repeat(5 - stars) + '</span>';
+
+    // ★ 令和のとき、インフラ分類タグをカードに追加
+    const infraTagHtml = (currentEra?.code === 'gendai' && s.infra_category)
+      ? `<span class="tag infra">${s.infra_category}</span>`
+      : '';
+
     card.innerHTML = `
       <div class="spot-pref">${s.prefectures?.name || ''} <span class="spot-stars" data-rating="${stars}">${starHtml}</span></div>
       <div class="spot-name">${s.name}</div>
       <div class="spot-desc">${(s.description || '').slice(0, 80)}${(s.description || '').length > 80 ? '…' : ''}</div>
-      <div class="spot-tags">${tagHtml}</div>
+      <div class="spot-tags">${infraTagHtml}${tagHtml}</div>
       ${s.access_info ? `<div class="spot-access">${s.access_info}</div>` : ''}
     `;
     grid.appendChild(card);
@@ -518,6 +604,7 @@ function closeModal(e) {
   }
 }
 
+// 地域・無料フィルター
 document.getElementById('filters').addEventListener('click', e => {
   const btn = e.target.closest('.filter-btn');
   if (!btn) return;
@@ -529,6 +616,17 @@ document.getElementById('filters').addEventListener('click', e => {
     btn.classList.add('active');
     currentPref = btn.dataset.pref;
   }
+  renderSpots();
+});
+
+// ★ インフラ分類フィルター
+document.getElementById('infra-btns').addEventListener('click', e => {
+  const btn = e.target.closest('.infra-btn');
+  if (!btn) return;
+  selectedInfra = btn.dataset.infra;
+  document.querySelectorAll('.infra-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.infra === selectedInfra);
+  });
   renderSpots();
 });
 
