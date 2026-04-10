@@ -1,1 +1,542 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>イベント管理 — 管理者用</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --ink:    #1c1a15;
+  --paper:  #f5f0e8;
+  --light:  #ede8dc;
+  --accent: #6b4c2a;
+  --gold:   #c9923a;
+  --muted:  #7a6e5f;
+  --white:  #fff;
+  --green:  #1e7a47;
+  --red:    #c0392b;
+  --serif:  'Noto Serif JP', serif;
+  --sans:   'Noto Sans JP', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh}
 
+/* ── ログイン画面 ── */
+#login-screen{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;background:var(--ink);
+}
+.login-box{
+  background:var(--paper);border-radius:14px;
+  padding:2.5rem 2rem;width:320px;text-align:center;
+}
+.login-logo{font-family:var(--serif);font-size:1.5rem;font-weight:600;color:var(--accent);margin-bottom:.3rem}
+.login-sub{font-size:.75rem;color:var(--muted);margin-bottom:1.8rem}
+.login-box input{
+  width:100%;padding:.65rem .9rem;border:1px solid #ccc;
+  border-radius:8px;font-size:.9rem;font-family:var(--sans);
+  outline:none;margin-bottom:.75rem;
+  transition:border-color .15s;
+}
+.login-box input:focus{border-color:var(--gold)}
+.login-btn{
+  width:100%;padding:.65rem;border:none;border-radius:8px;
+  background:var(--accent);color:var(--white);
+  font-size:.9rem;font-weight:600;cursor:pointer;
+  font-family:var(--sans);transition:background .15s;
+}
+.login-btn:hover{background:#8b5e35}
+.login-err{font-size:.75rem;color:var(--red);margin-top:.5rem;min-height:1em}
+
+/* ── 管理画面 ── */
+#admin-screen{display:none}
+
+header{
+  background:var(--ink);color:var(--paper);
+  padding:1rem 1.5rem;
+  display:flex;align-items:center;gap:1rem;
+  border-bottom:3px solid var(--gold);
+}
+.h-title{font-family:var(--serif);font-size:1.2rem;font-weight:600}
+.h-badge{
+  font-size:.65rem;font-weight:700;
+  padding:.2rem .6rem;border-radius:20px;
+  background:#c0392b;color:#fff;letter-spacing:.05em;
+}
+.h-nav{margin-left:auto;display:flex;gap:.75rem}
+.h-nav a{font-size:.75rem;color:#aaa;text-decoration:none;transition:color .15s}
+.h-nav a:hover{color:var(--gold)}
+.logout-btn{
+  font-size:.72rem;color:#888;background:none;border:1px solid #555;
+  padding:.2rem .7rem;border-radius:20px;cursor:pointer;
+  font-family:var(--sans);transition:all .15s;
+}
+.logout-btn:hover{color:#fff;border-color:#999}
+
+.main{max-width:960px;margin:0 auto;padding:1.5rem}
+
+/* ── 操作パネル ── */
+.panel{
+  background:var(--white);border:1px solid #e0d9cd;
+  border-radius:12px;padding:1.25rem 1.5rem;
+  margin-bottom:1.5rem;
+}
+.panel-title{
+  font-family:var(--serif);font-size:1rem;font-weight:600;
+  color:var(--accent);margin-bottom:1rem;
+  display:flex;align-items:center;gap:.5rem;
+}
+.panel-title::before{
+  content:'';display:inline-block;
+  width:3px;height:1em;background:var(--gold);border-radius:2px;
+}
+
+.action-row{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+
+.btn{
+  font-size:.82rem;font-weight:600;
+  padding:.55rem 1.25rem;border-radius:20px;
+  border:none;cursor:pointer;font-family:var(--sans);
+  transition:all .15s;display:inline-flex;align-items:center;gap:.4rem;
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#8b5e35}
+.btn-primary:disabled{background:#ccc;cursor:not-allowed}
+.btn-danger{background:#c0392b;color:#fff}
+.btn-danger:hover{background:#a93226}
+.btn-danger:disabled{background:#ccc;cursor:not-allowed}
+.btn-outline{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.btn-outline:hover{background:var(--light)}
+
+.spinner{
+  display:none;width:14px;height:14px;
+  border:2px solid rgba(255,255,255,.4);
+  border-top-color:#fff;border-radius:50%;
+  animation:spin .6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── ステータスログ ── */
+.log-box{
+  margin-top:1rem;
+  background:#1c1a15;border-radius:8px;
+  padding:.75rem 1rem;
+  font-size:.76rem;font-family:monospace;
+  color:#b8c0cc;
+  max-height:180px;overflow-y:auto;
+  display:none;
+}
+.log-box.visible{display:block}
+.log-line{line-height:1.8}
+.log-ok{color:#7ecda0}
+.log-err{color:#f08080}
+.log-info{color:#90bce0}
+.log-warn{color:#f0c050}
+
+/* ── プレビューテーブル ── */
+.preview-wrap{overflow-x:auto;margin-top:1rem}
+table{width:100%;border-collapse:collapse;font-size:.76rem}
+th{
+  background:var(--light);color:var(--accent);
+  padding:.45rem .65rem;text-align:left;
+  border-bottom:2px solid #ddd6c8;white-space:nowrap;
+  font-weight:600;
+}
+td{
+  padding:.4rem .65rem;border-bottom:1px solid #e8e2d8;
+  color:var(--ink);line-height:1.4;max-width:200px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+tr:hover td{background:#faf7f2}
+.tag-sm{
+  display:inline-block;font-size:.62rem;
+  padding:.1rem .4rem;border-radius:10px;border:1px solid;
+}
+.tag-open{background:#e8f5ee;color:#1e7a47;border-color:#7ecda0}
+.tag-full{background:#fef0e0;color:#a05c10;border-color:#f0b870}
+.tag-ended{background:#f0f0ee;color:#888;border-color:#ccc}
+.tag-new{background:#e8f2fb;color:#1a5fa0;border-color:#90bce0}
+.tag-free{background:#e8f5ee;color:#1e7a47;border-color:#7ecda0}
+.tag-paid{background:#fefce8;color:#7a5a10;border-color:#e8c850}
+
+/* ── サマリー ── */
+.summary-row{display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap}
+.summary-card{
+  background:var(--light);border-radius:8px;
+  padding:.6rem 1rem;text-align:center;min-width:80px;
+}
+.summary-num{font-family:var(--serif);font-size:1.4rem;font-weight:700;color:var(--accent)}
+.summary-label{font-size:.65rem;color:var(--muted);margin-top:.1rem}
+
+/* ローディング */
+.state-msg{text-align:center;padding:2rem;color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+
+<!-- ログイン画面 -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">歴索 管理</div>
+    <div class="login-sub">管理者専用ページ</div>
+    <input type="password" id="pw-input" placeholder="パスワードを入力" autocomplete="off">
+    <button class="login-btn" onclick="doLogin()">ログイン</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- 管理画面 -->
+<div id="admin-screen">
+  <header>
+    <div class="h-title">歴索 イベント管理</div>
+    <span class="h-badge">管理者</span>
+    <nav class="h-nav">
+      <a href="/events.html" target="_blank">イベントページ →</a>
+      <a href="/index.html" target="_blank">スポット検索 →</a>
+    </nav>
+    <button class="logout-btn" onclick="doLogout()">ログアウト</button>
+  </header>
+
+  <main class="main">
+
+    <!-- ① 取り込みパネル -->
+    <div class="panel">
+      <div class="panel-title">Googleスプレッドシートから取り込む</div>
+      <div class="action-row">
+        <button class="btn btn-primary" id="fetch-btn" onclick="fetchAndPreview()">
+          <span id="fetch-spinner" class="spinner"></span>
+          📥 スプレッドから読み込む
+        </button>
+        <button class="btn btn-primary" id="import-btn" onclick="importToSupabase()" disabled>
+          <span id="import-spinner" class="spinner"></span>
+          💾 Supabaseへ保存
+        </button>
+        <button class="btn btn-danger" id="clear-btn" onclick="clearAllEvents()" style="margin-left:auto">
+          🗑 全件削除
+        </button>
+      </div>
+      <div class="log-box" id="log-box"></div>
+    </div>
+
+    <!-- ② プレビューパネル -->
+    <div class="panel" id="preview-panel" style="display:none">
+      <div class="panel-title">取り込みプレビュー <span id="preview-count" style="font-size:.8rem;color:var(--muted);font-weight:400"></span></div>
+      <div class="summary-row" id="summary-row"></div>
+      <div class="preview-wrap">
+        <table id="preview-table">
+          <thead>
+            <tr>
+              <th>#</th><th>日程</th><th>ステータス</th><th>タイトル</th>
+              <th>会費</th><th>集合時間</th><th>集合場所</th><th>解散時間</th><th>定員</th>
+            </tr>
+          </thead>
+          <tbody id="preview-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ③ Supabase現在データ -->
+    <div class="panel">
+      <div class="panel-title">Supabase保存済みイベント</div>
+      <button class="btn btn-outline" onclick="loadSaved()" style="margin-bottom:.75rem;font-size:.75rem">
+        🔄 再読み込み
+      </button>
+      <div id="saved-area"><div class="state-msg">読み込み中...</div></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── 設定 ──────────────────────────────────────────────────────
+const ADMIN_PASSWORD = 'asst2026';   // ← パスワードを変更してください
+const SUPABASE_URL   = 'https://sunxpjbdvidftukiutxg.supabase.co';
+const SUPABASE_ANON  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1bnhwamJkdmlkZnR1a2l1dHhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NTU1MDUsImV4cCI6MjA5MDEzMTUwNX0.L9RU4U3kWy4CJzyVR4FEKUrDX8fD2jzWAbQxyaDOIsU';
+const SHEET_URL      = 'https://docs.google.com/spreadsheets/d/1c4W6SNpF_sxugfsN-XnD7EWPv22YyQKYCI0OFmlzBKQ/gviz/tq?gid=664362630';
+const TABLE          = 'circle_events';
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// 列インデックス
+const C = {
+  isNew:0, status:1, date:2, fee:4,
+  payDate:5, pay:6, title:9, special:10,
+  meetTime:12, meetPlace:13, capacity:17, notes:18, endTime:19, facFee:16
+};
+
+function v(row, idx) {
+  const c = row.c[idx];
+  if (!c || c.v === null || c.v === undefined) return '';
+  return (c.f !== undefined && c.f !== null) ? c.f : String(c.v);
+}
+
+// ── ログイン ─────────────────────────────────────────────────
+function doLogin() {
+  const pw = document.getElementById('pw-input').value;
+  if (pw === ADMIN_PASSWORD) {
+    sessionStorage.setItem('rekisaku_admin', '1');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-screen').style.display = 'block';
+    loadSaved();
+  } else {
+    document.getElementById('login-err').textContent = 'パスワードが違います';
+    document.getElementById('pw-input').value = '';
+  }
+}
+function doLogout() {
+  sessionStorage.removeItem('rekisaku_admin');
+  location.reload();
+}
+document.getElementById('pw-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+// セッション維持
+if (sessionStorage.getItem('rekisaku_admin') === '1') {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-screen').style.display = 'block';
+  loadSaved();
+}
+
+// ── ログ表示 ─────────────────────────────────────────────────
+function log(msg, type = 'info') {
+  const box = document.getElementById('log-box');
+  box.classList.add('visible');
+  const line = document.createElement('div');
+  line.className = 'log-line log-' + type;
+  const now = new Date().toLocaleTimeString('ja-JP');
+  line.textContent = '[' + now + '] ' + msg;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+function clearLog() {
+  const box = document.getElementById('log-box');
+  box.innerHTML = '';
+  box.classList.remove('visible');
+}
+
+// ── プレビューデータ保持 ──────────────────────────────────────
+let previewData = [];
+
+// ── スプレッドから読み込み（JSONP）────────────────────────────
+function fetchAndPreview() {
+  clearLog();
+  previewData = [];
+  document.getElementById('import-btn').disabled = true;
+  document.getElementById('preview-panel').style.display = 'none';
+  document.getElementById('fetch-btn').disabled = true;
+  document.getElementById('fetch-spinner').style.display = 'inline-block';
+  log('Googleスプレッドシートに接続中...', 'info');
+
+  // 古いスクリプトタグを削除
+  const old = document.getElementById('gviz-script');
+  if (old) old.remove();
+
+  // JSONP コールバック設定
+  window.google = window.google || {};
+  window.google.visualization = window.google.visualization || {};
+  window.google.visualization.Query = window.google.visualization.Query || {};
+  window.google.visualization.Query.setResponse = function(data) {
+    document.getElementById('fetch-spinner').style.display = 'none';
+    document.getElementById('fetch-btn').disabled = false;
+    if (data.status !== 'ok') {
+      log('取得エラー: ' + JSON.stringify(data.errors), 'err');
+      return;
+    }
+    const rows = data.table.rows;
+    const events = rows.filter((r, i) => {
+      const title = v(r, C.title);
+      return title && title.trim() !== '';
+    });
+    log('スプレッドシートから ' + events.length + ' 件のイベントを取得しました', 'ok');
+    previewData = events.map((row, i) => ({
+      row_index:    i,
+      is_new:       v(row, C.isNew) === 'NEW',
+      status:       v(row, C.status),
+      event_date:   v(row, C.date),
+      title:        v(row, C.title),
+      fee:          v(row, C.fee),
+      pay_date:     v(row, C.payDate),
+      pay_method:   v(row, C.pay),
+      meet_time:    v(row, C.meetTime),
+      meet_place:   v(row, C.meetPlace),
+      end_time:     v(row, C.endTime),
+      capacity:     v(row, C.capacity) ? parseInt(v(row, C.capacity)) : null,
+      notes:        v(row, C.notes),
+      special_note: v(row, C.special),
+      fac_fee:      v(row, C.facFee),
+    }));
+    renderPreview(previewData);
+    document.getElementById('import-btn').disabled = false;
+    log('プレビューを表示しました。「Supabaseへ保存」ボタンで保存できます。', 'info');
+  };
+
+  const script = document.createElement('script');
+  script.id = 'gviz-script';
+  script.src = SHEET_URL;
+  script.onerror = function() {
+    document.getElementById('fetch-spinner').style.display = 'none';
+    document.getElementById('fetch-btn').disabled = false;
+    log('スクリプト読み込みエラー。スプレッドシートの共有設定を確認してください。', 'err');
+  };
+  document.head.appendChild(script);
+}
+
+// ── プレビュー描画 ────────────────────────────────────────────
+function renderPreview(events) {
+  const panel = document.getElementById('preview-panel');
+  panel.style.display = 'block';
+  document.getElementById('preview-count').textContent = '（' + events.length + ' 件）';
+
+  // サマリー
+  const open   = events.filter(e => e.status === '募集中').length;
+  const full   = events.filter(e => e.status === '満席').length;
+  const ended  = events.filter(e => e.status === '終了').length;
+  const free   = events.filter(e => !e.fee || e.fee === '無料').length;
+  document.getElementById('summary-row').innerHTML =
+    card(events.length, '合計') +
+    card(open,  '募集中', 'color:#1e7a47') +
+    card(full,  '満席',   'color:#a05c10') +
+    card(ended, '終了',   'color:#888') +
+    card(free,  '無料',   'color:#1e7a47');
+
+  // テーブル行
+  const tbody = document.getElementById('preview-body');
+  tbody.innerHTML = '';
+  events.forEach((e, i) => {
+    const statusTag = e.status === '募集中'
+      ? '<span class="tag-sm tag-open">募集中</span>'
+      : e.status === '満席'
+        ? '<span class="tag-sm tag-full">満席</span>'
+        : '<span class="tag-sm tag-ended">終了</span>';
+    const feeTag = (!e.fee || e.fee === '無料')
+      ? '<span class="tag-sm tag-free">無料</span>'
+      : '<span class="tag-sm tag-paid">' + e.fee + '</span>';
+    const newBadge = e.is_new ? '<span class="tag-sm tag-new" style="margin-left:3px">NEW</span>' : '';
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + (i + 1) + '</td>' +
+      '<td>' + (e.event_date || '—') + '</td>' +
+      '<td>' + statusTag + newBadge + '</td>' +
+      '<td title="' + e.title + '">' + e.title + '</td>' +
+      '<td>' + feeTag + '</td>' +
+      '<td>' + (e.meet_time  || '—') + '</td>' +
+      '<td title="' + (e.meet_place || '') + '">' + (e.meet_place || '—') + '</td>' +
+      '<td>' + (e.end_time   || '—') + '</td>' +
+      '<td>' + (e.capacity   || '—') + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function card(num, label, style='') {
+  return '<div class="summary-card"><div class="summary-num" style="' + style + '">' + num + '</div><div class="summary-label">' + label + '</div></div>';
+}
+
+// ── Supabaseへ保存（UPSERT）──────────────────────────────────
+async function importToSupabase() {
+  if (!previewData.length) return;
+  document.getElementById('import-btn').disabled = true;
+  document.getElementById('import-spinner').style.display = 'inline-block';
+  log('Supabaseへ保存開始... (' + previewData.length + ' 件)', 'info');
+
+  // 既存データを全削除してから再挿入
+  const { error: delErr } = await db.from(TABLE).delete().gte('id', 0);
+  if (delErr) {
+    log('削除エラー: ' + delErr.message, 'err');
+    document.getElementById('import-btn').disabled = false;
+    document.getElementById('import-spinner').style.display = 'none';
+    return;
+  }
+  log('既存データを削除しました', 'info');
+
+  // バッチ挿入（10件ずつ）
+  const BATCH = 10;
+  let success = 0;
+  for (let i = 0; i < previewData.length; i += BATCH) {
+    const chunk = previewData.slice(i, i + BATCH);
+    const { error } = await db.from(TABLE).insert(chunk);
+    if (error) {
+      log('挿入エラー (行' + i + '～): ' + error.message, 'err');
+    } else {
+      success += chunk.length;
+      log(success + ' 件 保存済み...', 'ok');
+    }
+  }
+
+  document.getElementById('import-spinner').style.display = 'none';
+  document.getElementById('import-btn').disabled = false;
+
+  if (success === previewData.length) {
+    log('✅ 全 ' + success + ' 件の保存が完了しました！', 'ok');
+  } else {
+    log('⚠️ ' + success + '/' + previewData.length + ' 件を保存しました（一部エラーあり）', 'warn');
+  }
+  loadSaved();
+}
+
+// ── 全件削除 ─────────────────────────────────────────────────
+async function clearAllEvents() {
+  if (!confirm('Supabaseのイベントデータを全件削除しますか？')) return;
+  const { error } = await db.from(TABLE).delete().gte('id', 0);
+  if (error) {
+    log('削除エラー: ' + error.message, 'err');
+  } else {
+    log('全件削除しました', 'warn');
+    loadSaved();
+  }
+}
+
+// ── 保存済みデータ表示 ────────────────────────────────────────
+async function loadSaved() {
+  const area = document.getElementById('saved-area');
+  area.innerHTML = '<div class="state-msg">読み込み中...</div>';
+  const { data, error } = await db.from(TABLE).select('*').order('row_index');
+  if (error) {
+    area.innerHTML = '<div class="state-msg" style="color:var(--red)">エラー: ' + error.message + '</div>';
+    return;
+  }
+  if (!data || !data.length) {
+    area.innerHTML = '<div class="state-msg">保存されているイベントはありません</div>';
+    return;
+  }
+  const open   = data.filter(e => e.status === '募集中').length;
+  const full   = data.filter(e => e.status === '満席').length;
+  const imp    = data[0]?.imported_at ? new Date(data[0].imported_at).toLocaleString('ja-JP') : '—';
+
+  area.innerHTML =
+    '<div class="summary-row">' +
+    card(data.length, '合計') +
+    card(open, '募集中', 'color:#1e7a47') +
+    card(full, '満席',   'color:#a05c10') +
+    '</div>' +
+    '<div style="font-size:.7rem;color:var(--muted);margin-bottom:.75rem">最終取り込み: ' + imp + '</div>' +
+    '<div class="preview-wrap">' +
+    '<table><thead><tr><th>#</th><th>日程</th><th>ステータス</th><th>タイトル</th><th>会費</th><th>集合時間</th><th>集合場所</th><th>解散時間</th><th>定員</th></tr></thead><tbody>' +
+    data.map((e, i) => {
+      const st = e.status === '募集中'
+        ? '<span class="tag-sm tag-open">募集中</span>'
+        : e.status === '満席'
+          ? '<span class="tag-sm tag-full">満席</span>'
+          : '<span class="tag-sm tag-ended">終了</span>';
+      const fee = (!e.fee || e.fee === '無料')
+        ? '<span class="tag-sm tag-free">無料</span>'
+        : '<span class="tag-sm tag-paid">' + e.fee + '</span>';
+      return '<tr>' +
+        '<td>' + (i+1) + '</td>' +
+        '<td>' + (e.event_date||'—') + '</td>' +
+        '<td>' + st + (e.is_new ? '<span class="tag-sm tag-new" style="margin-left:3px">NEW</span>' : '') + '</td>' +
+        '<td title="' + e.title + '">' + e.title + '</td>' +
+        '<td>' + fee + '</td>' +
+        '<td>' + (e.meet_time||'—') + '</td>' +
+        '<td title="' + (e.meet_place||'') + '">' + (e.meet_place||'—') + '</td>' +
+        '<td>' + (e.end_time||'—') + '</td>' +
+        '<td>' + (e.capacity||'—') + '</td>' +
+        '</tr>';
+    }).join('') +
+    '</tbody></table></div>';
+}
+</script>
+</body>
+</html>
