@@ -421,7 +421,7 @@ function selectEra(era) {
     num.textContent = score + '%';
     num.style.color = color;
     drawDonut(score, color, 'score-donut-canvas');
-    const revolutions = {meiji:'★第1革命 蒸気・電気', showa_mid:'★第2革命 三種の神器', heisei:'★第3革命 インターネット'};
+    const revolutions = {meiji:'★第1革命 蒸気・電気', showa_mid:'★第2革命 三種の神器', heisei:'★第3革命 インターネット', gendai:'★第4革命 AI'};
     const badge = document.getElementById('score-badge');
     const badgeWrap = document.getElementById('score-badge-wrap');
     if (revolutions[era.code]) {
