@@ -1,1 +1,300 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>イベント情報 — サークルアスト</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:    #1c1a15;
+  --paper:  #f5f0e8;
+  --sepia:  #8b6f47;
+  --light:  #ede8dc;
+  --accent: #6b4c2a;
+  --gold:   #c9923a;
+  --muted:  #7a6e5f;
+  --white:  #fff;
+  --serif:  'Noto Serif JP', serif;
+  --sans:   'Noto Sans JP', sans-serif;
+  --radius: 12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh}
 
+header{
+  background:var(--ink);color:var(--paper);
+  padding:1.25rem 1.5rem;
+  display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap;
+  border-bottom:3px solid var(--gold);
+}
+.site-name{font-family:var(--serif);font-size:1.5rem;font-weight:600;letter-spacing:.05em}
+.site-tagline{font-size:.75rem;color:var(--gold);letter-spacing:.08em}
+
+.nav-bar{background:#2a2720;padding:.5rem 1.5rem;display:flex;gap:1rem}
+.nav-link{font-size:.75rem;color:#aaa;text-decoration:none;letter-spacing:.05em;transition:color .15s}
+.nav-link:hover{color:var(--gold)}
+.nav-link.active{color:var(--gold);border-bottom:1px solid var(--gold);padding-bottom:2px}
+
+.main{max-width:900px;margin:0 auto;padding:1.5rem}
+
+.page-title{
+  font-family:var(--serif);font-size:1.3rem;font-weight:700;
+  color:var(--accent);margin-bottom:.3rem;
+  display:flex;align-items:center;gap:.5rem;
+}
+.page-title::before{
+  content:'';display:inline-block;
+  width:4px;height:1.2em;
+  background:var(--gold);border-radius:2px;
+}
+.page-subtitle{font-size:.75rem;color:var(--muted);margin-bottom:1.5rem}
+
+.event-list{display:flex;flex-direction:column;gap:1rem}
+
+.event-card{
+  background:var(--white);
+  border:1px solid #e0d9cd;
+  border-radius:var(--radius);
+  overflow:hidden;
+  transition:box-shadow .15s, transform .1s;
+}
+.event-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-1px)}
+.event-card.is-full{opacity:.85}
+.event-card.is-ended{opacity:.6}
+
+.card-head{
+  display:flex;align-items:center;gap:.65rem;
+  padding:.7rem 1rem;
+  background:var(--light);
+  border-bottom:1px solid #e0d9cd;
+  flex-wrap:wrap;
+}
+.event-date{
+  font-family:var(--serif);font-size:.95rem;font-weight:600;
+  color:var(--accent);white-space:nowrap;
+}
+.badge{
+  font-size:.68rem;font-weight:600;
+  padding:.18rem .55rem;border-radius:20px;
+  border:1px solid;white-space:nowrap;
+}
+.badge-new{background:#e8f2fb;color:#1a5fa0;border-color:#90bce0}
+.badge-open{background:#e8f5ee;color:#1e7a47;border-color:#7ecda0}
+.badge-full{background:#fef0e0;color:#a05c10;border-color:#f0b870}
+.badge-ended{background:#f0f0ee;color:#888;border-color:#ccc}
+.badge-fee-free{background:#e8f5ee;color:#1e7a47;border-color:#7ecda0;margin-left:auto}
+.badge-fee-paid{background:#fefce8;color:#7a5a10;border-color:#e8c850;margin-left:auto}
+
+.card-body{padding:.9rem 1rem 1rem}
+.event-title{
+  font-family:var(--serif);font-size:1.05rem;font-weight:600;
+  color:var(--ink);line-height:1.5;margin-bottom:.7rem;
+}
+
+.info-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
+  gap:.35rem .75rem;
+  margin-bottom:.6rem;
+}
+.info-item{display:flex;align-items:baseline;gap:.4rem;font-size:.78rem}
+.info-label{
+  color:var(--muted);white-space:nowrap;flex-shrink:0;
+  font-size:.67rem;letter-spacing:.04em;
+  padding:.1rem .4rem;border-radius:4px;
+  background:var(--light);
+}
+.info-val{color:var(--ink);line-height:1.5}
+
+.notes-box{
+  font-size:.76rem;color:#555;line-height:1.75;
+  background:#faf7f2;
+  border-left:3px solid var(--gold);
+  padding:.5rem .75rem;border-radius:0 6px 6px 0;
+  margin-top:.5rem;white-space:pre-line;
+}
+.special-box{
+  font-size:.72rem;color:var(--accent);line-height:1.6;
+  margin-top:.4rem;
+  padding:.4rem .65rem;
+  background:#fff8ef;border-radius:6px;border:1px solid #f0d090;
+}
+
+.reserve-btn{
+  display:inline-block;margin-top:.75rem;
+  font-size:.78rem;font-weight:600;
+  padding:.45rem 1.25rem;border-radius:20px;
+  background:var(--accent);color:var(--white);
+  text-decoration:none;transition:background .15s;
+}
+.reserve-btn:hover{background:#8b5e35}
+.reserve-btn.full{background:#ccc;color:#888;pointer-events:none;cursor:default}
+
+.state-msg{text-align:center;padding:3rem 1rem;color:var(--muted);font-size:.85rem}
+.loading-dots{display:inline-flex;gap:.3rem}
+.loading-dots span{width:6px;height:6px;border-radius:50%;background:var(--sepia);animation:bounce .8s infinite}
+.loading-dots span:nth-child(2){animation-delay:.15s}
+.loading-dots span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+
+footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-top:1px solid #ddd6c8;margin-top:2rem}
+
+@media(max-width:600px){
+  .main{padding:1rem}
+  .info-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="site-name">歴索</div>
+  <div class="site-tagline">レキサク — 歴史時代別 社会科見学スポット 関東版</div>
+</header>
+
+<nav class="nav-bar">
+  <a href="/index.html" class="nav-link">スポット検索</a>
+  <a href="/events.html" class="nav-link active">イベント情報</a>
+  <a href="/board.html" class="nav-link">掲示板</a>
+</nav>
+
+<main class="main">
+  <div class="page-title">直近のイベント情報</div>
+  <div class="page-subtitle" id="page-subtitle">読み込み中...</div>
+  <div class="event-list" id="event-list">
+    <div class="state-msg"><div class="loading-dots"><span></span><span></span><span></span></div></div>
+  </div>
+</main>
+
+<footer>&copy; 2026 Produced by サークルアスト</footer>
+
+<script>
+// 列インデックス（0始まり）
+const C = {
+  isNew:0, status:1, date:2, reserve:3, fee:4,
+  payDate:5, pay:6, title:9, special:10,
+  meetTime:12, meetPlace:13,
+  capacity:17, notes:18, endTime:19
+};
+
+function v(row, idx) {
+  const c = row.c[idx];
+  if (!c || c.v === null || c.v === undefined) return '';
+  return (c.f !== undefined && c.f !== null) ? c.f : String(c.v);
+}
+
+function renderEvents(data) {
+  const list = document.getElementById('event-list');
+  const sub  = document.getElementById('page-subtitle');
+
+  const rows   = data.table.rows;
+  const events = rows.filter(r => v(r, C.title)).slice(0, 10);
+
+  if (!events.length) {
+    list.innerHTML = '<div class="state-msg">イベント情報はありません</div>';
+    sub.textContent = '';
+    return;
+  }
+
+  sub.textContent = '直近 ' + events.length + ' 件のイベントを表示（スプレッドシートより自動取得）';
+  list.innerHTML = '';
+
+  events.forEach(function(row) {
+    var status    = v(row, C.status);
+    var isNew     = v(row, C.isNew) === 'NEW';
+    var date      = v(row, C.date);
+    var title     = v(row, C.title);
+    var fee       = v(row, C.fee);
+    var meetTime  = v(row, C.meetTime);
+    var meetPlace = v(row, C.meetPlace);
+    var endTime   = v(row, C.endTime);
+    var capacity  = v(row, C.capacity);
+    var notes     = v(row, C.notes);
+    var special   = v(row, C.special);
+    var payDate   = v(row, C.payDate);
+    var pay       = v(row, C.pay);
+
+    var isFull  = status === '満席';
+    var isEnded = status === '終了';
+    var cardCls = isFull ? 'is-full' : isEnded ? 'is-ended' : '';
+
+    // ステータスバッジ
+    var sCls = isFull ? 'badge badge-full' : isEnded ? 'badge badge-ended' : 'badge badge-open';
+
+    // 会費バッジ
+    var freeFlag = !fee || fee === '無料';
+    var feeBadgeHtml = freeFlag
+      ? '<span class="badge badge-fee-free" style="margin-left:auto">無料</span>'
+      : '<span class="badge badge-fee-paid" style="margin-left:auto">会費 ' + fee + '</span>';
+
+    // 情報アイテム
+    var items = '';
+    if (meetTime)  items += '<div class="info-item"><span class="info-label">集合時間</span><span class="info-val">' + meetTime + '</span></div>';
+    if (meetPlace) items += '<div class="info-item"><span class="info-label">集合場所</span><span class="info-val">' + meetPlace + '</span></div>';
+    if (endTime)   items += '<div class="info-item"><span class="info-label">解散時間</span><span class="info-val">' + endTime + '</span></div>';
+    if (capacity)  items += '<div class="info-item"><span class="info-label">定員</span><span class="info-val">' + capacity + '名</span></div>';
+    if (!freeFlag && payDate) items += '<div class="info-item"><span class="info-label">支払期限</span><span class="info-val">' + payDate + '</span></div>';
+    if (!freeFlag && pay)     items += '<div class="info-item"><span class="info-label">支払方法</span><span class="info-val">' + pay + '</span></div>';
+
+    var notesHtml   = notes   ? '<div class="notes-box">' + notes + '</div>' : '';
+    var specialHtml = special ? '<div class="special-box">⚠️ ' + special + '</div>' : '';
+
+    var btnHtml = '';
+    if (!isEnded) {
+      btnHtml = isFull
+        ? '<span class="reserve-btn full">満席</span>'
+        : '<a class="reserve-btn" href="https://reserva.be/circleasst" target="_blank" rel="noopener">申し込む →</a>';
+    }
+
+    var card = document.createElement('div');
+    card.className = 'event-card ' + cardCls;
+    card.innerHTML =
+      '<div class="card-head">' +
+        '<div class="event-date">📅 ' + date + '</div>' +
+        (isNew ? '<span class="badge badge-new">NEW</span>' : '') +
+        '<span class="' + sCls + '">' + status + '</span>' +
+        feeBadgeHtml +
+      '</div>' +
+      '<div class="card-body">' +
+        '<div class="event-title">' + title + '</div>' +
+        '<div class="info-grid">' + items + '</div>' +
+        notesHtml +
+        specialHtml +
+        btnHtml +
+      '</div>';
+    list.appendChild(card);
+  });
+}
+
+// ── JSONP でCORSを回避 ──────────────────────────────────────
+// gviz は google.visualization.Query.setResponse(data) を呼ぶ
+// → その関数を先に定義しておけばscriptタグ読み込みで取得できる
+window.google = window.google || {};
+window.google.visualization = window.google.visualization || {};
+window.google.visualization.Query = window.google.visualization.Query || {};
+window.google.visualization.Query.setResponse = function(data) {
+  if (data.status === 'ok') {
+    renderEvents(data);
+  } else {
+    document.getElementById('event-list').innerHTML =
+      '<div class="state-msg">データ取得エラー: ' + (data.errors || []).map(function(e){ return e.message; }).join(', ') + '</div>';
+    document.getElementById('page-subtitle').textContent = '';
+  }
+};
+
+// scriptタグを動的に追加して読み込む（JSONP）
+(function() {
+  var script = document.createElement('script');
+  script.src = 'https://docs.google.com/spreadsheets/d/1c4W6SNpF_sxugfsN-XnD7EWPv22YyQKYCI0OFmlzBKQ/gviz/tq?gid=664362630';
+  script.onerror = function() {
+    document.getElementById('event-list').innerHTML =
+      '<div class="state-msg">データの読み込みに失敗しました。<br>スプレッドシートの共有設定を「リンクを知っている全員が閲覧可」にしてください。</div>';
+    document.getElementById('page-subtitle').textContent = '';
+  };
+  document.head.appendChild(script);
+})();
+</script>
+</body>
+</html>
