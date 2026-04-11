@@ -315,7 +315,7 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
       <div class="modal-row"><span class="modal-label">住所</span><span class="modal-val" id="m-addr"></span></div>
       <div class="modal-row"><span class="modal-label">アクセス</span><span class="modal-val" id="m-access"></span></div>
       <div class="modal-row"><span class="modal-label">開館時間</span><span class="modal-val" id="m-hours"></span></div>
-      <div class="modal-row"><span class="modal-label">入場料</span><span class="modal-val" id="m-fee"></span></div>
+      <div class="modal-row" id="m-fee-row"><span class="modal-label">入場料</span><span class="modal-val" id="m-fee"></span></div>
       <div class="modal-row" id="m-url-row"><span class="modal-label">公式サイト</span><a class="modal-link modal-val" id="m-url" target="_blank" rel="noopener"></a></div>
     </div>
     <div class="modal-eras" id="m-eras"></div>
@@ -582,7 +582,16 @@ function openModal(s) {
   document.getElementById('m-addr').textContent   = s.address || '—';
   document.getElementById('m-access').textContent = s.access_info || '—';
   document.getElementById('m-hours').textContent  = s.open_hours || '—';
-  document.getElementById('m-fee').textContent    = s.admission_fee || '—';
+
+  // 入場料：無料なら「無料」表示、有料は行ごと非表示
+  const feeRow = document.getElementById('m-fee-row');
+  if (s.is_free) {
+    feeRow.style.display = 'flex';
+    document.getElementById('m-fee').textContent = '無料';
+  } else {
+    feeRow.style.display = 'none';
+  }
+
   const urlEl  = document.getElementById('m-url');
   const urlRow = document.getElementById('m-url-row');
   if (s.website_url) {
