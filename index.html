@@ -361,14 +361,17 @@ let currentPref = '';
 let freeOnly    = false;
 let selectedInfra = '';
 
-// Wikipedia記事名からサムネイルURLを取得
+// Wikipedia記事名からサムネイルURLを取得（en:プレフィックスで英語版を使用）
 async function fetchWikipediaThumbnails() {
   const targets = eras.filter(e => e.image_url && !e.image_url.startsWith('http'));
   await Promise.all(targets.map(async era => {
     try {
+      const isEn  = era.image_url.startsWith('en:');
+      const lang  = isEn ? 'en' : 'ja';
+      const title = isEn ? era.image_url.slice(3) : era.image_url;
       const res = await fetch(
-        'https://ja.wikipedia.org/api/rest_v1/page/summary/' +
-        encodeURIComponent(era.image_url)
+        'https://' + lang + '.wikipedia.org/api/rest_v1/page/summary/' +
+        encodeURIComponent(title)
       );
       const data = await res.json();
       era.image_url = data.thumbnail?.source || null;
