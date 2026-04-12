@@ -42,10 +42,9 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 /* 時代メタ情報 */
 .era-meta{background:var(--light);border-bottom:1px solid #ddd6c8;padding:1rem 1.5rem}
 /* ★ 時代名+画像の横並びレイアウト */
-.era-meta-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.2rem}
-.era-meta-header-left{flex:1;min-width:0}
-.era-meta-name{font-family:var(--serif);font-size:1.1rem;font-weight:600}
-.era-period{font-size:.75rem;color:var(--muted);margin-bottom:.6rem}
+.era-meta-header{display:flex;align-items:center;gap:.75rem;margin-bottom:.2rem;flex-wrap:wrap}
+.era-meta-name{font-family:var(--serif);font-size:1.65rem;font-weight:600}
+.era-period{font-size:1.1rem;color:var(--muted);margin-bottom:.6rem}
 /* ★ 時代代表画像 */
 .era-img-wrap{flex-shrink:0}
 .era-img{width:110px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #ccc6b8;display:block}
@@ -218,17 +217,15 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
 </nav>
 
 <div class="era-meta" id="era-meta">
-  <!-- ★ 時代名と代表画像を横並び -->
+  <!-- ★ 時代名・画像を横並び -->
   <div class="era-meta-header">
-    <div class="era-meta-header-left">
-      <div class="era-meta-name"></div>
-      <div class="era-period"></div>
-    </div>
+    <div class="era-meta-name"></div>
     <div class="era-img-wrap" id="era-img-wrap" style="display:none">
       <img class="era-img" id="era-img" src="" alt="">
       <div class="era-img-credit">© Wikimedia Commons</div>
     </div>
   </div>
+  <div class="era-period"></div>
   <div class="era-desc"></div>
   <div id="score-badge-wrap" style="display:none;margin-bottom:.5rem"><span class="score-badge" id="score-badge"></span></div>
   <div class="era-tech" id="era-tech" style="display:none"></div>
@@ -364,9 +361,27 @@ let currentPref = '';
 let freeOnly    = false;
 let selectedInfra = '';
 
+// Wikipedia記事名からサムネイルURLを取得
+async function fetchWikipediaThumbnails() {
+  const targets = eras.filter(e => e.image_url && !e.image_url.startsWith('http'));
+  await Promise.all(targets.map(async era => {
+    try {
+      const res = await fetch(
+        'https://ja.wikipedia.org/api/rest_v1/page/summary/' +
+        encodeURIComponent(era.image_url)
+      );
+      const data = await res.json();
+      era.image_url = data.thumbnail?.source || null;
+    } catch {
+      era.image_url = null;
+    }
+  }));
+}
+
 async function init() {
   const { data: eraData } = await db.from('eras').select('*').order('sort_order');
   eras = eraData || [];
+  await fetchWikipediaThumbnails();  // ★ Wikipedia APIでサムネイル解決
   buildEraTabs();
 
   const { data: spotData } = await db
