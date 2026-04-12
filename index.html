@@ -41,8 +41,16 @@ header{background:var(--ink);color:var(--paper);padding:1.25rem 1.5rem;display:f
 
 /* 時代メタ情報 */
 .era-meta{background:var(--light);border-bottom:1px solid #ddd6c8;padding:1rem 1.5rem}
-.era-meta-name{font-family:var(--serif);font-size:1.1rem;font-weight:600;margin-bottom:.2rem}
+/* ★ 時代名+画像の横並びレイアウト */
+.era-meta-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.2rem}
+.era-meta-header-left{flex:1;min-width:0}
+.era-meta-name{font-family:var(--serif);font-size:1.1rem;font-weight:600}
 .era-period{font-size:.75rem;color:var(--muted);margin-bottom:.6rem}
+/* ★ 時代代表画像 */
+.era-img-wrap{flex-shrink:0}
+.era-img{width:110px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #ccc6b8;display:block}
+.era-img-credit{font-size:.58rem;color:var(--muted);text-align:right;margin-top:.2rem;line-height:1.3}
+
 .era-desc{font-size:.8rem;color:var(--accent);line-height:1.7;max-width:700px;margin-bottom:.75rem}
 .score-wrap{display:flex;align-items:center;gap:1rem;margin-bottom:.5rem}
 .score-donut-wrap{position:relative;width:72px;height:72px;flex-shrink:0}
@@ -194,6 +202,7 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
   .site-name{font-size:1.2rem}
   .filters{padding:.5rem 1rem}
   .infra-filter-bar{padding:.5rem 1rem}
+  .era-img{width:80px;height:60px}
 }
 </style>
 </head>
@@ -209,8 +218,17 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
 </nav>
 
 <div class="era-meta" id="era-meta">
-  <div class="era-meta-name"></div>
-  <div class="era-period"></div>
+  <!-- ★ 時代名と代表画像を横並び -->
+  <div class="era-meta-header">
+    <div class="era-meta-header-left">
+      <div class="era-meta-name"></div>
+      <div class="era-period"></div>
+    </div>
+    <div class="era-img-wrap" id="era-img-wrap" style="display:none">
+      <img class="era-img" id="era-img" src="" alt="">
+      <div class="era-img-credit">© Wikimedia Commons</div>
+    </div>
+  </div>
   <div class="era-desc"></div>
   <div id="score-badge-wrap" style="display:none;margin-bottom:.5rem"><span class="score-badge" id="score-badge"></span></div>
   <div class="era-tech" id="era-tech" style="display:none"></div>
@@ -329,6 +347,7 @@ footer{text-align:center;padding:2rem;font-size:.7rem;color:var(--muted);border-
     <a href="/board.html" style="color:var(--gold);font-size:.8rem;text-decoration:none;border:1px solid var(--gold);padding:.3rem .9rem;border-radius:20px;">💬 メンバー掲示板</a>
   </div>
   &copy; 2026 Produced by サークルアスト
+  <div style="margin-top:.4rem;font-size:.65rem;color:#aaa">時代代表写真：© Wikimedia Commons (CC BY-SA)</div>
 </footer>
 
 <script>
@@ -343,7 +362,7 @@ let spotTagMap  = {};
 let currentEra  = null;
 let currentPref = '';
 let freeOnly    = false;
-let selectedInfra = '';  // ★ インフラ分類フィルター
+let selectedInfra = '';
 
 async function init() {
   const { data: eraData } = await db.from('eras').select('*').order('sort_order');
@@ -352,7 +371,7 @@ async function init() {
 
   const { data: spotData } = await db
     .from('spots')
-    .select('*, prefectures(name), infra_category')  // ★ infra_category追加
+    .select('*, prefectures(name), infra_category')
     .eq('status', true);
   allSpots = spotData || [];
 
@@ -396,7 +415,7 @@ function selectEra(era) {
     tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }
 
-  // ★ 令和のときだけインフラフィルターバーを表示、それ以外は非表示＆リセット
+  // 令和のときだけインフラフィルターバーを表示
   const infraBar = document.getElementById('infra-filter-bar');
   if (era.code === 'gendai') {
     infraBar.classList.add('visible');
@@ -413,6 +432,17 @@ function selectEra(era) {
   meta.querySelector('.era-meta-name').style.color = era.color_hex || '#1c1a15';
   meta.querySelector('.era-period').textContent = era.period;
   meta.querySelector('.era-desc').textContent = era.description || '';
+
+  // ★ 時代代表画像の表示切り替え
+  const imgWrap = document.getElementById('era-img-wrap');
+  const imgEl   = document.getElementById('era-img');
+  if (era.image_url) {
+    imgEl.src = era.image_url;
+    imgEl.alt = era.name_ja + '時代の代表的なスポット';
+    imgWrap.style.display = 'block';
+  } else {
+    imgWrap.style.display = 'none';
+  }
 
   const score = era.human_labor_score;
   const scoreWrap = document.getElementById('score-wrap');
@@ -528,7 +558,6 @@ function renderSpots() {
   if (currentPref) filtered = filtered.filter(s => s.prefectures?.name === currentPref);
   if (freeOnly)    filtered = filtered.filter(s => s.is_free);
 
-  // ★ インフラ分類フィルター（令和のみ有効）
   if (currentEra?.code === 'gendai' && selectedInfra) {
     filtered = filtered.filter(s => s.infra_category === selectedInfra);
   }
@@ -556,10 +585,8 @@ function renderSpots() {
       if (t === 'おすすめ') cls += ' recommend';
       return `<span class="${cls}">${t}</span>`;
     }).join('');
-    const stars = Math.min(s.star_rating || 3, 3);  // MAX3
+    const stars = Math.min(s.star_rating || 3, 3);
     const starHtml = '<span class="star-filled">' + '★'.repeat(stars) + '</span><span class="star-empty">' + '☆'.repeat(3 - stars) + '</span>';
-
-    // ★ 令和のとき、インフラ分類タグをカードに追加
     const infraTagHtml = (currentEra?.code === 'gendai' && s.infra_category)
       ? `<span class="tag infra">${s.infra_category}</span>`
       : '';
@@ -585,7 +612,6 @@ function openModal(s) {
   document.getElementById('m-access').textContent = s.access_info || '—';
   document.getElementById('m-hours').textContent  = s.open_hours || '—';
 
-  // 入場料：無料なら「無料」表示、有料は行ごと非表示
   const feeRow = document.getElementById('m-fee-row');
   if (s.is_free) {
     feeRow.style.display = 'flex';
@@ -616,7 +642,6 @@ function closeModal(e) {
   }
 }
 
-// 地域・無料フィルター
 document.getElementById('filters').addEventListener('click', e => {
   const btn = e.target.closest('.filter-btn');
   if (!btn) return;
@@ -631,7 +656,6 @@ document.getElementById('filters').addEventListener('click', e => {
   renderSpots();
 });
 
-// ★ インフラ分類フィルター
 document.getElementById('infra-btns').addEventListener('click', e => {
   const btn = e.target.closest('.infra-btn');
   if (!btn) return;
