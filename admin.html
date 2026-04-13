@@ -143,7 +143,7 @@ function buildPills(){
 
 async function loadSpots(){
   const[s,se]=await Promise.all([
-    db.from('spots').select('*,prefectures(name)').order('created_at',{ascending:false}),
+    db.from('spots').select('*,prefectures(name)').order('name_kana',{ascending:true,nullsFirst:false}),
     db.from('spot_eras').select('spot_id,eras(id,name_ja)')
   ]);
   allSpots=s.data||[]; spotEraMap={};
