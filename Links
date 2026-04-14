@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🗺️ サークルアスト 情報ダッシュボード</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f11;
+    --bg2: #16161a;
+    --bg3: #1e1e24;
+    --border: rgba(255,255,255,0.08);
+    --accent: #c9a84c;
+    --accent2: #7ec8c8;
+    --text: #e8e6e0;
+    --text-muted: #888;
+    --cat-vr: #8b5cf6;
+    --cat-hist: #c9a84c;
+    --cat-map: #4caf8b;
+    --cat-rt: #e85c4a;
+    --cat-space: #5b8de8;
+    --cat-event: #e8884a;
+    --cat-food: #d94f7b;
+    --cat-field: #7ec8c8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, #0f0f11 0%, #1a1520 50%, #0f1215 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 24px 30px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(201,168,76,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 50%, rgba(126,200,200,0.05) 0%, transparent 60%);
+  }
+  .header-inner { position: relative; z-index: 1; }
+  .header-icon { font-size: 2.4rem; margin-bottom: 8px; }
+  header h1 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #fff;
+  }
+  header p {
+    margin-top: 8px;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── Layout ── */
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 32px 16px;
+  }
+
+  /* ── Category card ── */
+  .category {
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--bg2);
+    transition: border-color 0.2s;
+  }
+  .category:hover { border-color: rgba(255,255,255,0.15); }
+
+  .cat-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 16px 20px;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    letter-spacing: 0.02em;
+  }
+  .cat-toggle:hover { background: rgba(255,255,255,0.03); }
+
+  .cat-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .cat-toggle .chevron {
+    margin-left: auto;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    transition: transform 0.25s;
+  }
+  .cat-toggle.open .chevron { transform: rotate(180deg); }
+
+  .cat-body {
+    display: none;
+    padding: 0 16px 16px;
+  }
+  .cat-body.open { display: block; }
+
+  /* ── Sub category ── */
+  .sub-category {
+    margin-top: 10px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    overflow: hidden;
+    background: var(--bg3);
+  }
+
+  .sub-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 14px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 400;
+    cursor: pointer;
+    text-align: left;
+    letter-spacing: 0.02em;
+  }
+  .sub-toggle:hover { background: rgba(255,255,255,0.03); color: var(--text); }
+  .sub-toggle .sub-chevron {
+    margin-left: auto;
+    font-size: 0.65rem;
+    transition: transform 0.2s;
+  }
+  .sub-toggle.open { color: var(--text); }
+  .sub-toggle.open .sub-chevron { transform: rotate(180deg); }
+
+  .sub-body {
+    display: none;
+    padding: 6px 14px 14px;
+  }
+  .sub-body.open { display: block; }
+
+  /* ── Link list ── */
+  .link-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .link-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 5px;
+    transition: background 0.15s;
+  }
+  .link-list li:hover { background: rgba(255,255,255,0.04); }
+  .link-list li::before {
+    content: '→';
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+  .link-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .link-item a {
+    color: var(--accent2);
+    text-decoration: none;
+    font-size: 0.87rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    transition: color 0.15s;
+  }
+  .link-item a:hover { color: #fff; text-decoration: underline; }
+  .link-desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  /* direct links in cat-body (no sub) */
+  .direct-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .direct-links li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 5px;
+    transition: background 0.15s;
+  }
+  .direct-links li:hover { background: rgba(255,255,255,0.04); }
+  .direct-links li::before {
+    content: '→';
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+
+  /* ── Recruit banner ── */
+  .recruit-banner {
+    margin-top: 32px;
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 10px;
+    background: rgba(201,168,76,0.06);
+    padding: 24px 24px 20px;
+  }
+  .recruit-banner h2 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.95rem;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+  .recruit-banner p {
+    font-size: 0.85rem;
+    color: #aaa;
+    line-height: 1.7;
+    margin-bottom: 12px;
+  }
+  .recruit-banner ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .recruit-banner ul li {
+    font-size: 0.83rem;
+    color: var(--text-muted);
+    padding-left: 14px;
+    position: relative;
+  }
+  .recruit-banner ul li::before {
+    content: '・';
+    position: absolute; left: 0;
+    color: var(--accent);
+  }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+  }
+
+  /* Color classes */
+  .c-vr    { background: var(--cat-vr); }
+  .c-hist  { background: var(--cat-hist); }
+  .c-map   { background: var(--cat-map); }
+  .c-rt    { background: var(--cat-rt); }
+  .c-space { background: var(--cat-space); }
+  .c-event { background: var(--cat-event); }
+  .c-food  { background: var(--cat-food); }
+  .c-field { background: var(--cat-field); }
+
+  @media (max-width: 480px) {
+    header h1 { font-size: 1.25rem; }
+    .cat-toggle { font-size: 0.88rem; padding: 14px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-icon">🗺️</div>
+    <h1>サークルアスト 情報ダッシュボード</h1>
+    <p>Circle ASST — 情報リンク集</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- 1. VR・バーチャル体験 -->
+  <div class="category">
+    <button class="cat-toggle" onclick="toggleCat(this)">
+      <span class="cat-dot c-vr"></span>
+      🥽 VR・バーチャル体験
+      <span class="chevron">▼</span>
+    </button>
+    <div class="cat-body">
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">VR遺跡・史跡<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="http://www.yoshinogari-iseki.com/vt2201/" target="_blank">吉野ヶ里遺跡バーチャルツアー</a><span class="link-desc">吉野ヶ里歴史公園 VT</span></div></li>
+            <li><div class="link-item"><a href="https://www.asukamura.jp/virtualasukawebmap/index.html" target="_blank">バーチャル飛鳥京</a><span class="link-desc">明日香村 バーチャル飛鳥京</span></div></li>
+            <li><div class="link-item"><a href="https://www.ku-orcas.kansai-u.ac.jp/takamatsuzuka/PC_ver/P_TakamatuN.html" target="_blank">VR高松塚古墳</a><span class="link-desc">関西大学 高松塚古墳VR</span></div></li>
+            <li><div class="link-item"><a href="https://www.courts.go.jp/saikosai/kengaku/kengakudouga/index.html" target="_blank">VR最高裁判所</a><span class="link-desc">裁判所 VR見学動画</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">VR工場見学<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://global.toyota/jp/company/plant-tours/" target="_blank">トヨタバーチャル工場見学</a><span class="link-desc">トヨタ自動車 バーチャル工場見学</span></div></li>
+            <li><div class="link-item"><a href="https://www.youtube.com/watch?v=i7zXhAOxsaI" target="_blank">VRカゴメ工場見学</a><span class="link-desc">カゴメ YouTube VR工場見学</span></div></li>
+            <li><div class="link-item"><a href="https://my.matterport.com/show/?m=thu6ioACPZz" target="_blank">VR国立印刷局</a><span class="link-desc">Matterport 国立印刷局VR</span></div></li>
+            <li><div class="link-item"><a href="https://www.lotte.co.jp/entertainment/factory/" target="_blank">VRロッテ工場見学</a><span class="link-desc">ロッテ バーチャル工場見学</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">VR博物館・資料館<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://www.tdb-muse.jp/VR/" target="_blank">帝国データバンク史料館</a><span class="link-desc">帝国データバンク VR史料館</span></div></li>
+            <li><div class="link-item"><a href="https://museum.bunka.go.jp/guide/" target="_blank">博物館総合サイト</a><span class="link-desc">文化庁 ミュージアムガイド</span></div></li>
+            <li><div class="link-item"><a href="https://www.jacar.go.jp/" target="_blank">国立公文書館アジア歴史資料センター</a><span class="link-desc">JACAR アジア歴史資料センター</span></div></li>
+            <li><div class="link-item"><a href="https://emuseum.nich.go.jp/top?langId=ja&webView=" target="_blank">e国宝</a><span class="link-desc">国立文化財機構 e国宝</span></div></li>
+            <li><div class="link-item"><a href="https://colbase.nich.go.jp/?locale=ja" target="_blank">国立文化財機構所蔵品</a><span class="link-desc">ColBase 国立文化財機構所蔵品</span></div></li>
+            <li><div class="link-item"><a href="https://www.kahaku.go.jp/VR/" target="_blank">VR国立科学博物館</a><span class="link-desc">国立科学博物館 VRツアー</span></div></li>
+            <li><div class="link-item"><a href="https://nam-vm.jp/" target="_blank">VR国立アイヌ博物館</a><span class="link-desc">ウポポイ 国立アイヌ民族博物館VR</span></div></li>
+            <li><div class="link-item"><a href="https://my.matterport.com/show/?m=nvNxttSFHdA" target="_blank">VR古代オリエント博物館</a><span class="link-desc">Matterport 古代オリエント博物館</span></div></li>
+            <li><div class="link-item"><a href="https://naturalhistory2.si.edu/vt3/NMNH/z_tour-022.html" target="_blank">VRスミソニア博物館</a><span class="link-desc">スミソニアン自然史博物館VR</span></div></li>
+            <li><div class="link-item"><a href="https://my.matterport.com/show/?m=85n8j312Ur4" target="_blank">VRエジプト考古学博物館</a><span class="link-desc">Matterport エジプト考古学博物館</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2. 歴史・文化財 -->
+  <div class="category">
+    <button class="cat-toggle" onclick="toggleCat(this)">
+      <span class="cat-dot c-hist"></span>
+      🏛️ 歴史・文化財
+      <span class="chevron">▼</span>
+    </button>
+    <div class="cat-body">
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">アーカイブ・一覧<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://dl.ndl.go.jp/" target="_blank">デジタルコレクション</a><span class="link-desc">国立国会図書館 デジタルコレクション</span></div></li>
+            <li><div class="link-item"><a href="https://bunka.nii.ac.jp/heritages/time_machine?genreCds=1&areaCds=13&classificationCds=1%2C2&language=ja" target="_blank">重要文化財一覧</a><span class="link-desc">文化遺産オンライン 重要文化財一覧（東京）</span></div></li>
+            <li><div class="link-item"><a href="https://www.j-muse.or.jp/index.php" target="_blank">日本博物館協会</a><span class="link-desc">全国博物館情報</span></div></li>
+            <li><div class="link-item"><a href="https://www.nhk.or.jp/school/bunkazai/" target="_blank">ものすごい図鑑文化財</a><span class="link-desc">NHK for School 文化財図鑑</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">錦絵・家紋・天皇陵<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://www.ndl.go.jp/landmarks/tokyo/" target="_blank">江戸錦絵</a><span class="link-desc">国立国会図書館 江戸・東京の地名と錦絵</span></div></li>
+            <li><div class="link-item"><a href="https://www.touken-world.jp/tips/121139/" target="_blank">家紋の調べ方</a><span class="link-desc">刀剣ワールド 家紋調べ方ガイド</span></div></li>
+            <li><div class="link-item"><a href="https://www.kunaicho.go.jp/ryobo/" target="_blank">天皇陵</a><span class="link-desc">宮内庁 陵墓一覧</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">遺跡<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://tokyo-iseki.metro.tokyo.lg.jp/" target="_blank">東京都遺跡地図情報</a><span class="link-desc">東京都教育委員会 埋蔵文化財地図</span></div></li>
+            <li><div class="link-item"><a href="https://sketchfab.com/sakitamamuse" target="_blank">さきたま施設博物館（3D）</a><span class="link-desc">Sketchfab 3Dモデル公開</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 3. 地図・地理 -->
+  <div class="category">
+    <button class="cat-toggle" onclick="toggleCat(this)">
+      <span class="cat-dot c-map"></span>
+      🗾 地図・地理
+      <span class="chevron">▼</span>
+    </button>
+    <div class="cat-body">
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">現代地図<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://biodiversity-map.thinknature-japan.com/" target="_blank">生物多様性地図</a><span class="link-desc">日本の生物多様性マップ</span></div></li>
+            <li><div class="link-item"><a href="https://gbank.gsj.jp/geonavi/geonavi.php#6,38.247,137.000" target="_blank">地質図</a><span class="link-desc">産総研 地質調査総合センター 地質図ナビ</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">古地図<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://lapis.nichibun.ac.jp/chizu/zoomify/mapview.php?m=002437630_o" target="_blank">明治29年横浜地図</a><span class="link-desc">日文研 古地図コレクション</span></div></li>
+            <li><div class="link-item"><a href="https://lapis.nichibun.ac.jp/chizu/zoomify/mapview.php?m=001815174_o" target="_blank">昭和9年東京観光図</a><span class="link-desc">日文研 古地図コレクション</span></div></li>
+            <li><div class="link-item"><a href="https://habs.rad.naro.go.jp/compare.html" target="_blank">現在過去比較地図</a><span class="link-desc">農研機構 土地利用変化比較</span></div></li>
+            <li><div class="link-item"><a href="https://www.tsunagaru-map.com/pf-tokyo/map.html?map=5" target="_blank">東京古地図</a><span class="link-desc">つながる地図 東京歴史マップ</span></div></li>
+            <li><div class="link-item"><a href="https://www.digital.archives.go.jp/DAS/pickup/view/category/categoryArchives/0200000000/0201100000/00" target="_blank">明治東京全図</a><span class="link-desc">国立公文書館デジタルアーカイブ</span></div></li>
+            <li><div class="link-item"><a href="https://lapis.nichibun.ac.jp/chizu/map_detail.php?id=002876597" target="_blank">東京一目新図</a><span class="link-desc">日文研 古地図コレクション</span></div></li>
+            <li><div class="link-item"><a href="https://ktgis.net/kjmapw/index.html" target="_blank">今昔マップ</a><span class="link-desc">今昔マップ on the web</span></div></li>
+            <li><div class="link-item"><a href="https://jhico.org/map/" target="_blank">JHICO MAP</a><span class="link-desc">JHICO 歴史地図</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 4. リアルタイム情報 -->
+  <div class="category">
+    <button class="cat-toggle" onclick="toggleCat(this)">
+      <span class="cat-dot c-rt"></span>
+      📡 リアルタイム情報
+      <span class="chevron">▼</span>
+    </button>
+    <div class="cat-body">
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">🚢 海・空・宇宙<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://www.marinetraffic.com/en/ais/home/centerx:139.650/centery:35.455/zoom:15" target="_blank">マリントラフィック</a><span class="link-desc">船舶リアルタイム追跡（横浜近辺）</span></div></li>
+            <li><div class="link-item"><a href="https://www.flightradar24.com/35.54,139.76/13" target="_blank">Flightradar24</a><span class="link-desc">航空機リアルタイム追跡（羽田・成田近辺）</span></div></li>
+            <li><div class="link-item"><a href="https://www.heavens-above.com/?lat=35.45&lng=139.63&alt=10&tz=JST" target="_blank">Heavens-Above 人工衛星</a><span class="link-desc">人工衛星・ISS・ロケットの通過予報（横浜基準）</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">🌦️ 気象・防災<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://www.jma.go.jp/bosai/nowc/" target="_blank">雨雲レーダー（気象庁）</a><span class="link-desc">高解像度降水ナウキャスト（5分更新）</span></div></li>
+            <li><div class="link-item"><a href="https://www.windy.com/?35.459,139.628,10" target="_blank">Windy</a><span class="link-desc">世界の風・雨・波浪・気温のリアルタイム気象アニメーション</span></div></li>
+            <li><div class="link-item"><a href="https://www.river.go.jp/kawabou/pc/index.do" target="_blank">川の防災情報</a><span class="link-desc">全国河川の水位・ライブカメラ（国土交通省）</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">🚃 交通<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://map.yahoo.co.jp/route/car" target="_blank">Yahoo!カーナビ 渋滞情報</a><span class="link-desc">首都圏リアルタイム渋滞マップ</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 5. 宇宙・天体 -->
+  <div class="category">
+    <button class="cat-toggle" onclick="toggleCat(this)">
+      <span class="cat-dot c-space"></span>
+      🌌 宇宙・天体
+      <span class="chevron">▼</span>
+    </button>
+    <div class="cat-body">
+      <ul class="direct-links">
+        <li><div class="link-item"><a href="https://www.astroarts.co.jp/alacarte/" target="_blank">星空ガイド</a><span class="link-desc">アストロアーツ 星空ガイド</span></div></li>
+        <li><div class="link-item"><a href="https://wired.jp/gallery/the-james-webb-space-telescope-photo/" target="_blank">ジェイムズ・ウェッブ宇宙望遠鏡</a><span class="link-desc">WIRED Japan 撮影画像ギャラリー</span></div></li>
+        <li><div class="link-item"><a href="https://lookup.kibo.space/" target="_blank">きぼうをみよう</a><span class="link-desc">国際宇宙ステーション「きぼう」可視予報</span></div></li>
+        <li><div class="link-item"><a href="https://www.geogebra.org/m/t68YESYg" target="_blank">天体の動き</a><span class="link-desc">GeoGebra インタラクティブ天体シミュレーション</span></div></li>
+        <li><div class="link-item"><a href="https://www.nao.ac.jp/study/naojvr/" target="_blank">VR国立天文台</a><span class="link-desc">国立天文台 VRバーチャルツアー</span></div></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 6. イベント・お出かけ情報 -->
+  <div class="category">
+    <button class="cat-toggle" onclick="toggleCat(this)">
+      <span class="cat-dot c-event"></span>
+      📅 イベント・お出かけ情報
+      <span class="chevron">▼</span>
+    </button>
+    <div class="cat-body">
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">🗼 東京<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://www.gotokyo.org/jp/index.html" target="_blank">GO TOKYO 公式</a><span class="link-desc">東京観光公式サイト・スポット・イベント網羅</span></div></li>
+            <li><div class="link-item"><a href="https://www.gotokyo.org/jp/ranking/index.html" target="_blank">東京観光人気ランキング</a><span class="link-desc">GO TOKYO 公式人気スポットランキング</span></div></li>
+            <li><div class="link-item"><a href="https://www.enjoytokyo.jp/event/list/pref13/" target="_blank">レッツエンジョイ東京</a><span class="link-desc">東京のイベント・お出かけ情報を毎日更新</span></div></li>
+            <li><div class="link-item"><a href="https://www.walkerplus.com/top/ar0313/" target="_blank">ウォーカープラス 東京</a><span class="link-desc">東京のおでかけ・イベント総合情報</span></div></li>
+            <li><div class="link-item"><a href="https://www.timeout.com/tokyo/ja" target="_blank">Time Out Tokyo</a><span class="link-desc">話題のスポット・カルチャーイベント情報（英日）</span></div></li>
+            <li><div class="link-item"><a href="https://www.jalan.net/kankou/130000/g2_F3/" target="_blank">じゃらん 工場見学（東京）</a><span class="link-desc">東京の工場見学ランキング</span></div></li>
+            <li><div class="link-item"><a href="https://www.ozmall.co.jp/factory/" target="_blank">OZmall 工場見学まとめ</a><span class="link-desc">東京・関東近郊のおすすめ工場見学一覧</span></div></li>
+            <li><div class="link-item"><a href="https://www.jalan.net/news/article/224758/" target="_blank">じゃらんニュース 工場見学24選</a><span class="link-desc">関東の工場見学おすすめ特集（2025年版）</span></div></li>
+            <li><div class="link-item"><a href="https://tabelog.com/tokyo/" target="_blank">食べログ 東京</a><span class="link-desc">東京エリアのレストラン検索</span></div></li>
+            <li><div class="link-item"><a href="https://r.gnavi.co.jp/area/tokyo/ethnic/" target="_blank">ぐるなびエスニック料理（東京）</a><span class="link-desc">東京の世界各国料理レストラン検索</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">🏙️ 横浜・神奈川<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://www.welcome.city.yokohama.jp/eventinfo/?flg=MONTH#result-list" target="_blank">横浜観光情報イベント</a><span class="link-desc">横浜市観光情報センター・月別イベント一覧</span></div></li>
+            <li><div class="link-item"><a href="https://www.kanagawa-kankou.or.jp/event" target="_blank">観光かながわNOW イベント</a><span class="link-desc">神奈川県公式観光サイトのイベントカレンダー</span></div></li>
+            <li><div class="link-item"><a href="https://www.enjoytokyo.jp/event/list/pref14/" target="_blank">レッツエンジョイ東京（神奈川）</a><span class="link-desc">神奈川のイベント・お出かけ情報を日々更新</span></div></li>
+            <li><div class="link-item"><a href="https://www.kanagawa-kankou.or.jp/features/Industrial-tourism" target="_blank">観光かながわ 産業観光特集</a><span class="link-desc">横浜・川崎の大人の社会科見学スポット特集</span></div></li>
+            <li><div class="link-item"><a href="https://www.jalan.net/kankou/maj_141000000/g2_F3/" target="_blank">じゃらん 工場見学（横浜）</a><span class="link-desc">横浜の工場見学ランキング</span></div></li>
+            <li><div class="link-item"><a href="https://kids.rurubu.jp/article/20099/" target="_blank">るるぶKids 神奈川の工場見学</a><span class="link-desc">神奈川の無料・格安工場見学13選</span></div></li>
+            <li><div class="link-item"><a href="https://tabelog.com/kanagawa/A1401/A140101/" target="_blank">食べログ 横浜</a><span class="link-desc">横浜エリアのレストラン検索</span></div></li>
+            <li><div class="link-item"><a href="https://www.fujisawa-kanko.jp/global-data/20240930185715651.pdf" target="_blank">地球の歩き方（湘南・江の島）</a><span class="link-desc">湘南・江の島エリアガイドPDF</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 7. 世界料理イベント参考 -->
+  <div class="category">
+    <button class="cat-toggle" onclick="toggleCat(this)">
+      <span class="cat-dot c-food"></span>
+      🍽️ 世界料理イベント参考
+      <span class="chevron">▼</span>
+    </button>
+    <div class="cat-body">
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">🗺️ 世界料理を知る<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://www.tasteatlas.com/" target="_blank">TasteAtlas</a><span class="link-desc">世界料理の地図型百科事典。国や地域をクリックすると伝統料理・レシピ・本物のレストランが一覧できる。イベントの題材選びに最適</span></div></li>
+            <li><div class="link-item"><a href="https://www.tasteatlas.com/best" target="_blank">TasteAtlas ベスト料理ランキング</a><span class="link-desc">年次発表「世界のベスト料理100」「国別料理ランキング」。どの国料理をやるか決める参考に</span></div></li>
+            <li><div class="link-item"><a href="https://honkawa2.sakura.ne.jp/0208.html" target="_blank">世界の伝統料理ランキング</a><span class="link-desc">国別の伝統料理一覧と統計データ</span></div></li>
+            <li><div class="link-item"><a href="https://ja.wikipedia.org/wiki/%E5%90%84%E5%9B%BD%E6%96%99%E7%90%86%E3%81%AE%E8%A6%8B%E5%87%BA%E3%81%97%E4%B8%80%E8%A6%A7" target="_blank">Wikipedia 各国の料理</a><span class="link-desc">国・地域別の料理カテゴリ一覧（下調べの出発点に）</span></div></li>
+            <li><div class="link-item"><a href="https://ich.unesco.org/en/lists?text=&inscription=&mult_domain=00006&mult_domain=&page=1" target="_blank">UNESCO 無形文化遺産（食文化）</a><span class="link-desc">世界の食文化・料理に関するユネスコ無形文化遺産リスト</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">🏙️ 東京で食べられる世界料理<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://r.gnavi.co.jp/area/tokyo/ethnic/" target="_blank">ぐるなびエスニック料理（東京）</a><span class="link-desc">東京の世界各国料理レストランをエリア別に検索</span></div></li>
+            <li><div class="link-item"><a href="https://tabelog.com/tokyo/rstLst/ethnic/" target="_blank">食べログ 各国料理カテゴリ（東京）</a><span class="link-desc">東京のアジア・欧米・中東など各国料理店一覧</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">🍳 料理を調べる・レシピ参考<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://cookpad.com/search/%E3%82%A8%E3%82%B9%E3%83%8B%E3%83%83%E3%82%AF" target="_blank">Cookpad エスニック料理</a><span class="link-desc">世界各国料理のレシピ。イベント前の予習や紹介文作りに</span></div></li>
+            <li><div class="link-item"><a href="https://www.kyounoryouri.jp/search/recipe?keyword=%E4%B8%96%E7%95%8C%E6%96%99%E7%90%86" target="_blank">NHK きょうの料理 世界の料理</a><span class="link-desc">NHK公式レシピサイトの世界料理カテゴリ</span></div></li>
+            <li><div class="link-item"><a href="https://allabout.co.jp/gm/gt/2741/" target="_blank">All About グルメ・各国料理</a><span class="link-desc">各国料理の特徴・文化背景の解説記事</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 8. 大人の社会科見学 実用情報 -->
+  <div class="category">
+    <button class="cat-toggle" onclick="toggleCat(this)">
+      <span class="cat-dot c-field"></span>
+      🏫 大人の社会科見学 実用情報
+      <span class="chevron">▼</span>
+    </button>
+    <div class="cat-body">
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">🏗️ 産業遺産・近代化遺産<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://japan-heritage.bunka.go.jp/ja/stories/" target="_blank">日本遺産（文化庁）</a><span class="link-desc">地域の歴史・文化をつなぐストーリー型文化遺産</span></div></li>
+            <li><div class="link-item"><a href="https://www.jnto.go.jp/heritage/" target="_blank">世界遺産一覧（日本）</a><span class="link-desc">日本国内の世界遺産リストと概要</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">🔬 科学館・博物館 情報まとめ<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://www.j-muse.or.jp/index.php" target="_blank">日本博物館協会</a><span class="link-desc">全国の博物館・美術館を検索</span></div></li>
+            <li><div class="link-item"><a href="https://www.tobikan.jp/exhibition/" target="_blank">東京都美術館 展示</a><span class="link-desc">上野・都美の企画展情報</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">🚶 街歩き・散策ガイド<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://www.gsi.go.jp/kankyochiri/burariwalk.html" target="_blank">ぶらりうぉーく（国土地理院）</a><span class="link-desc">地図を片手に歩く全国コース集</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sub-category">
+        <button class="sub-toggle" onclick="toggleSub(this)">📋 見学・予約に便利なツール<span class="sub-chevron">▼</span></button>
+        <div class="sub-body">
+          <ul class="link-list">
+            <li><div class="link-item"><a href="https://www.jalan.net/activity/ctl/search/?searchcd=14&distCd=01" target="_blank">じゃらん 体験予約</a><span class="link-desc">関東の体験・工場見学・社会科見学を予約</span></div></li>
+            <li><div class="link-item"><a href="https://www.asoview.com/category/tour/?pref%5B%5D=13&pref%5B%5D=14" target="_blank">asoview!（アソビュー）</a><span class="link-desc">東京・神奈川の体験・見学ツアー一括検索</span></div></li>
+            <li><div class="link-item"><a href="https://www.veltra.com/jp/japan/" target="_blank">VELTRA（日本）</a><span class="link-desc">ガイド付きツアー・ユニーク体験の予約サイト</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Recruit Banner -->
+  <div class="recruit-banner">
+    <h2>＜メンバー募集中＞</h2>
+    <p>サークルアストをもっと盛り上げていくために、一緒に手伝ってくれるメンバーを募集しています！</p>
+    <ul>
+      <li>2027年春サークルアスト5周年イベント企画など</li>
+      <li>サークルアスト新規メンバーを増やしていく企画など</li>
+      <li>あなたのやりたいイベント企画などを実現させてみませんか？</li>
+    </ul>
+  </div>
+
+</div>
+
+<footer>
+  © Circle ASST — サークルアスト 情報ダッシュボード
+</footer>
+
+<script>
+  function toggleCat(btn) {
+    btn.classList.toggle('open');
+    const body = btn.nextElementSibling;
+    body.classList.toggle('open');
+  }
+  function toggleSub(btn) {
+    btn.classList.toggle('open');
+    const body = btn.nextElementSibling;
+    body.classList.toggle('open');
+  }
+</script>
+</body>
+</html>
