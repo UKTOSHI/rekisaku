@@ -218,7 +218,7 @@ footer{text-align:center;padding:2rem;font-size:.75rem;color:var(--muted);border
   <div class="era-tabs" id="era-tabs"></div>
 </nav>
 <!-- 15財閥リンク行 -->
-<div style="background:#fff;border-top:2px solid #e2e8f0;padding:.25rem 1rem">
+<div id="zaibatsu-bar" style="display:none;background:#fff;border-top:2px solid #e2e8f0;padding:.25rem 1rem">
   <a href="zaibatsu.html" style="font-family:var(--serif);font-size:.82rem;color:var(--primary);text-decoration:none;padding:.5rem .75rem;display:inline-block;letter-spacing:.05em;border-bottom:3px solid transparent;transition:all .15s;font-weight:600"
      onmouseover="this.style.borderBottomColor='#6c63ff'"
      onmouseout="this.style.borderBottomColor='transparent'">
@@ -439,6 +439,10 @@ function selectEra(era) {
     tab.classList.add('active');
     tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }
+
+  const zaibatsuEras = ['meiji','taisho','showa','showa_mid','heisei','gendai'];
+  document.getElementById('zaibatsu-bar').style.display =
+    zaibatsuEras.includes(era.code) ? 'block' : 'none';
 
   const infraBar = document.getElementById('infra-filter-bar');
   if (era.code === 'gendai') {
