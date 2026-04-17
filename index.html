@@ -440,7 +440,7 @@ function selectEra(era) {
     tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }
 
-  const zaibatsuEras = ['meiji','taisho','showa_early','showa_mid'];
+  const zaibatsuEras = ['meiji','taisho','showa_early'];
   document.getElementById('zaibatsu-bar').style.display =
     zaibatsuEras.includes(era.code) ? 'block' : 'none';
 
