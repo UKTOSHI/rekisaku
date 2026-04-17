@@ -49,7 +49,11 @@ header{background:linear-gradient(135deg,#6c63ff 0%,#ff6584 100%);color:#fff;pad
 .era-img{width:110px;height:80px;object-fit:cover;border-radius:8px;border:2px solid var(--border);display:block;box-shadow:0 2px 8px rgba(0,0,0,.1)}
 .era-img-credit{font-size:.58rem;color:var(--muted);text-align:right;margin-top:.2rem;line-height:1.3}
 
-.era-desc{font-size:.85rem;color:#4a5568;line-height:1.8;max-width:700px;margin-bottom:.75rem}
+.era-desc{font-size:.85rem;color:#4a5568;line-height:1.8;max-width:700px;margin-bottom:.5rem}
+.era-desc-detail{font-size:.85rem;color:#4a5568;line-height:1.8;max-width:700px;margin-bottom:.75rem;display:none}
+.era-desc-detail.open{display:block}
+.btn-detail{font-size:.75rem;padding:3px 12px;border-radius:20px;border:1px solid #c8b89a;background:#fffdf7;color:#7a6a4f;cursor:pointer;margin-bottom:.75rem;transition:background .15s}
+.btn-detail:hover{background:#f5eed8}
 .score-wrap{display:flex;align-items:center;gap:1rem;margin-bottom:.5rem}
 .score-donut-wrap{position:relative;width:72px;height:72px;flex-shrink:0}
 .score-donut-wrap canvas{position:absolute;top:0;left:0}
@@ -235,6 +239,8 @@ footer{text-align:center;padding:2rem;font-size:.75rem;color:var(--muted);border
   </div>
   <div class="era-period"></div>
   <div class="era-desc"></div>
+  <div class="era-desc-detail" id="era-desc-detail"></div>
+  <button class="btn-detail" id="btn-detail" style="display:none" onclick="toggleEraDetail()">詳細を見る ▼</button>
   <div id="score-badge-wrap" style="display:none;margin-bottom:.5rem"><span class="score-badge" id="score-badge"></span></div>
   <div class="era-tech" id="era-tech" style="display:none"></div>
   <div class="era-stats" id="era-stats" style="display:none">
@@ -432,6 +438,13 @@ function buildEraTabs() {
   });
 }
 
+function toggleEraDetail() {
+  const detailEl = document.getElementById('era-desc-detail');
+  const btn = document.getElementById('btn-detail');
+  const isOpen = detailEl.classList.toggle('open');
+  btn.textContent = isOpen ? '閉じる ▲' : '詳細を見る ▼';
+}
+
 function selectEra(era) {
   currentEra = era;
   document.querySelectorAll('.era-tab').forEach(b => b.classList.remove('active'));
@@ -460,7 +473,21 @@ function selectEra(era) {
   meta.querySelector('.era-meta-name').textContent = era.name_ja + '時代';
   meta.querySelector('.era-meta-name').style.color = era.color_hex || '#c8b89a';
   meta.querySelector('.era-period').textContent = era.period;
-  meta.querySelector('.era-desc').innerHTML = era.description || '';
+  const fullDesc = era.description || '';
+  const splitIdx = fullDesc.indexOf('【');
+  const summaryHtml = splitIdx > 0 ? fullDesc.slice(0, splitIdx).trim() : fullDesc;
+  const detailHtml  = splitIdx > 0 ? fullDesc.slice(splitIdx).trim() : '';
+  meta.querySelector('.era-desc').innerHTML = summaryHtml;
+  const detailEl = document.getElementById('era-desc-detail');
+  const btnDetail = document.getElementById('btn-detail');
+  detailEl.innerHTML = detailHtml;
+  detailEl.classList.remove('open');
+  if (detailHtml) {
+    btnDetail.style.display = 'inline-block';
+    btnDetail.textContent = '詳細を見る ▼';
+  } else {
+    btnDetail.style.display = 'none';
+  }
 
   const imgWrap = document.getElementById('era-img-wrap');
   const imgEl   = document.getElementById('era-img');
