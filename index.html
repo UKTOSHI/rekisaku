@@ -460,7 +460,7 @@ function selectEra(era) {
   meta.querySelector('.era-meta-name').textContent = era.name_ja + '時代';
   meta.querySelector('.era-meta-name').style.color = era.color_hex || '#c8b89a';
   meta.querySelector('.era-period').textContent = era.period;
-  meta.querySelector('.era-desc').textContent = era.description || '';
+  meta.querySelector('.era-desc').innerHTML = era.description || '';
 
   const imgWrap = document.getElementById('era-img-wrap');
   const imgEl   = document.getElementById('era-img');
