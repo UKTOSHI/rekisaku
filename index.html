@@ -545,7 +545,7 @@ function selectEra(era) {
   }
 
   const statsEl = document.getElementById('era-stats');
-  const prevEra = eras[eras.findIndex(e => e.id === era.id) - 1] || null;
+  const prevEra = eras[eras.findIndex(e => e.id === era.id) + 1] || null;
   if (era.population_man != null) {
     statsEl.style.display = 'flex';
     document.getElementById('stat-pop-val').textContent =
