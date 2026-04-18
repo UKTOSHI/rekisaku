@@ -399,8 +399,8 @@ async function fetchWikipediaThumbnails() {
 
 function getTrend(current, previous) {
   if (previous == null || current == null) return { arrow: '', cls: '' };
-  if (current > previous * 1.02) return { arrow: '↑', cls: 'trend-up' };
-  if (current < previous * 0.98) return { arrow: '↓', cls: 'trend-down' };
+  if (current > previous) return { arrow: '↑', cls: 'trend-up' };
+  if (current < previous) return { arrow: '↓', cls: 'trend-down' };
   return { arrow: '→', cls: 'trend-flat' };
 }
 
