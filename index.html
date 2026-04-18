@@ -396,33 +396,31 @@ async function fetchWikipediaThumbnails() {
 }
 
 async function init() {
-  const { data: eraData } = await db.from('eras').select('*').order('sort_order');
+  const [
+    { data: eraData },
+    { data: spotData },
+    { data: seData },
+    { data: stData }
+  ] = await Promise.all([
+    db.from('eras').select('*').order('sort_order'),
+    db.from('spots').select('*, prefectures(name), infra_category').eq('status', true),
+    db.from('spot_eras').select('spot_id, eras(code, name_ja, color_hex)'),
+    db.from('spot_tags').select('spot_id, tags(name, category)')
+  ]);
+
   eras = eraData || [];
-  await fetchWikipediaThumbnails();
-  buildEraTabs();
-
-  const { data: spotData } = await db
-    .from('spots')
-    .select('*, prefectures(name), infra_category')
-    .eq('status', true);
   allSpots = spotData || [];
-
-  const { data: seData } = await db
-    .from('spot_eras')
-    .select('spot_id, eras(code, name_ja, color_hex)');
   (seData || []).forEach(r => {
     if (!spotEraMap[r.spot_id]) spotEraMap[r.spot_id] = [];
     spotEraMap[r.spot_id].push(r.eras);
   });
-
-  const { data: stData } = await db
-    .from('spot_tags')
-    .select('spot_id, tags(name, category)');
   (stData || []).forEach(r => {
     if (!spotTagMap[r.spot_id]) spotTagMap[r.spot_id] = [];
     spotTagMap[r.spot_id].push(r.tags.name);
   });
 
+  fetchWikipediaThumbnails(); // 画像は非同期でバックグラウンド取得
+  buildEraTabs();
   if (eras.length) selectEra(eras[0]);
 }
 
