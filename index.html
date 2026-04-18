@@ -72,6 +72,8 @@ header{background:linear-gradient(135deg,#6c63ff 0%,#ff6584 100%);color:#fff;pad
 .life-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:#4a5568;line-height:1.4;text-align:center}
 .stat-avgage{display:flex;flex-direction:column;gap:.2rem;align-items:center}
 .avgage-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:#4a5568;line-height:1.4;text-align:center}
+.trend-arrow{font-size:.75rem;font-weight:700;margin-left:.25rem;vertical-align:middle}
+.trend-up{color:#38a169}.trend-down{color:#e53e3e}.trend-flat{color:#a0aec0}
 .stat-chart-label{font-size:.68rem;color:var(--muted);text-align:center;font-weight:500}
 .donut-wrap{position:relative;width:72px;height:72px}
 .donut-wrap canvas{position:absolute;top:0;left:0}
@@ -246,15 +248,15 @@ footer{text-align:center;padding:2rem;font-size:.75rem;color:var(--muted);border
   <div class="era-stats" id="era-stats" style="display:none">
     <div class="stat-pop">
       <div class="stat-pop-label">推定人口</div>
-      <div style="text-align:center"><span class="stat-pop-val" id="stat-pop-val">—</span> <span class="stat-pop-unit">万人</span></div>
+      <div style="text-align:center"><span class="stat-pop-val" id="stat-pop-val">—</span> <span class="stat-pop-unit">万人</span><span class="trend-arrow" id="pop-trend"></span></div>
     </div>
     <div class="stat-avgage" id="stat-avgage" style="display:none">
       <div class="stat-pop-label">平均年齢</div>
-      <div class="avgage-val" id="avgage-val"></div>
+      <div><span class="avgage-val" id="avgage-val"></span><span class="trend-arrow" id="avgage-trend"></span></div>
     </div>
     <div class="stat-life" id="stat-life" style="display:none">
       <div class="stat-pop-label">平均寿命</div>
-      <div class="life-val" id="life-val"></div>
+      <div><span class="life-val" id="life-val"></span><span class="trend-arrow" id="life-trend"></span></div>
     </div>
     <div id="score-wrap" style="display:none">
       <div class="stat-chart">
@@ -395,6 +397,21 @@ async function fetchWikipediaThumbnails() {
   }));
 }
 
+function getTrend(current, previous) {
+  if (previous == null || current == null) return { arrow: '', cls: '' };
+  if (current > previous * 1.02) return { arrow: '↑', cls: 'trend-up' };
+  if (current < previous * 0.98) return { arrow: '↓', cls: 'trend-down' };
+  return { arrow: '→', cls: 'trend-flat' };
+}
+
+function setTrendEl(id, current, previous) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const { arrow, cls } = getTrend(current, previous);
+  el.textContent = arrow;
+  el.className = 'trend-arrow ' + cls;
+}
+
 async function init() {
   const [
     { data: eraData },
@@ -528,6 +545,7 @@ function selectEra(era) {
   }
 
   const statsEl = document.getElementById('era-stats');
+  const prevEra = eras[eras.findIndex(e => e.id === era.id) - 1] || null;
   if (era.population_man != null) {
     statsEl.style.display = 'flex';
     document.getElementById('stat-pop-val').textContent =
@@ -536,6 +554,7 @@ function selectEra(era) {
         : era.population_man.toLocaleString();
     document.querySelector('.stat-pop-unit').textContent =
       era.population_man >= 10000 ? '人' : '万人';
+    setTrendEl('pop-trend', era.population_man, prevEra?.population_man);
 
     const lifeEl = document.getElementById('stat-life');
     if (era.life_expectancy) {
@@ -545,6 +564,7 @@ function selectEra(era) {
       lifeEl.style.alignItems = 'center';
       lifeEl.style.gap = '0.2rem';
       document.getElementById('life-val').textContent = era.life_expectancy;
+      setTrendEl('life-trend', parseFloat(era.life_expectancy), parseFloat(prevEra?.life_expectancy));
     } else {
       lifeEl.style.display = 'none';
     }
@@ -553,6 +573,7 @@ function selectEra(era) {
     if (era.avg_age != null) {
       avgAgeEl.style.display = 'flex';
       document.getElementById('avgage-val').textContent = '約' + era.avg_age + '歳';
+      setTrendEl('avgage-trend', era.avg_age, prevEra?.avg_age);
     } else {
       avgAgeEl.style.display = 'none';
     }
