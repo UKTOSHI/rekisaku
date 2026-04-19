@@ -382,6 +382,19 @@ let currentPref = '';
 let freeOnly    = false;
 let selectedInfra = '';
 
+function updateEraImage(era) {
+  if (!currentEra || currentEra.id !== era.id) return;
+  const imgWrap = document.getElementById('era-img-wrap');
+  const imgEl   = document.getElementById('era-img');
+  if (era.image_url) {
+    imgEl.src = era.image_url;
+    imgEl.alt = era.name_ja + '時代の代表的なスポット';
+    imgWrap.style.display = 'block';
+  } else {
+    imgWrap.style.display = 'none';
+  }
+}
+
 async function fetchWikipediaThumbnails() {
   const targets = eras.filter(e => e.image_url && !e.image_url.startsWith('http'));
   await Promise.all(targets.map(async era => {
@@ -398,6 +411,7 @@ async function fetchWikipediaThumbnails() {
     } catch {
       era.image_url = null;
     }
+    updateEraImage(era);
   }));
 }
 
