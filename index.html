@@ -258,6 +258,10 @@ footer{text-align:center;padding:2rem;font-size:.75rem;color:var(--muted);border
       <div class="stat-pop-label">平均寿命</div>
       <div><span class="life-val" id="life-val"></span><span class="trend-arrow" id="life-trend"></span></div>
     </div>
+    <div class="stat-avgage" id="stat-temp" style="display:none">
+      <div class="stat-pop-label">平均気温</div>
+      <div><span class="avgage-val" id="temp-val"></span><span class="trend-arrow" id="temp-trend"></span></div>
+    </div>
     <div id="score-wrap" style="display:none">
       <div class="stat-chart">
         <div class="stat-chart-label">人力依存率</div>
@@ -576,6 +580,15 @@ function selectEra(era) {
       setTrendEl('avgage-trend', era.avg_age, prevEra?.avg_age);
     } else {
       avgAgeEl.style.display = 'none';
+    }
+
+    const tempEl = document.getElementById('stat-temp');
+    if (era.avg_temp != null) {
+      tempEl.style.display = 'flex';
+      document.getElementById('temp-val').textContent = era.avg_temp + '℃';
+      setTrendEl('temp-trend', era.avg_temp, prevEra?.avg_temp);
+    } else {
+      tempEl.style.display = 'none';
     }
 
     const rate   = era.farming_rate ?? 0;
