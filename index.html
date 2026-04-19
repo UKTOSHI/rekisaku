@@ -582,7 +582,12 @@ function selectEra(era) {
       lifeEl.style.alignItems = 'center';
       lifeEl.style.gap = '0.2rem';
       document.getElementById('life-val').textContent = era.life_expectancy;
-      setTrendEl('life-trend', parseFloat(era.life_expectancy), parseFloat(prevEra?.life_expectancy));
+      if (era.code !== 'paleolithic') {
+        setTrendEl('life-trend', parseFloat(era.life_expectancy), parseFloat(prevEra?.life_expectancy));
+      } else {
+        const lifeTrendEl = document.getElementById('life-trend');
+        if (lifeTrendEl) { lifeTrendEl.textContent = ''; lifeTrendEl.className = 'trend-arrow'; }
+      }
     } else {
       lifeEl.style.display = 'none';
     }
