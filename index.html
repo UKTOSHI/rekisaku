@@ -75,6 +75,8 @@ header{background:linear-gradient(135deg,#6c63ff 0%,#ff6584 100%);color:#fff;pad
 .era-desc-detail.open{display:block}
 .btn-detail{font-size:.75rem;padding:3px 12px;border-radius:20px;border:1px solid #c8b89a;background:#fffdf7;color:#7a6a4f;cursor:pointer;margin-bottom:.75rem;transition:background .15s}
 .btn-detail:hover{background:#f5eed8}
+.btn-era-map{display:inline-block;font-size:.75rem;padding:3px 12px;border-radius:20px;border:1px solid #8aacca;background:#f0f6ff;color:#3a6a9a;text-decoration:none;margin-bottom:.75rem;margin-left:.4rem;transition:background .15s}
+.btn-era-map:hover{background:#daeaf8}
 .score-wrap{display:flex;align-items:center;gap:1rem;margin-bottom:.5rem}
 .score-donut-wrap{position:relative;width:72px;height:72px;flex-shrink:0}
 .score-donut-wrap canvas{position:absolute;top:0;left:0}
@@ -264,6 +266,7 @@ footer{text-align:center;padding:2rem;font-size:.75rem;color:var(--muted);border
   <div class="era-desc"></div>
   <div class="era-desc-detail" id="era-desc-detail"></div>
   <button class="btn-detail" id="btn-detail" style="display:none" onclick="toggleEraDetail()">詳細を見る ▼</button>
+  <a class="btn-era-map" id="btn-era-map" href="#" target="_blank" rel="noopener" style="display:none">🗺️ 地図で見る</a>
   <div id="score-badge-wrap" style="display:none;margin-bottom:.5rem"><span class="score-badge" id="score-badge"></span></div>
   <div class="era-tech" id="era-tech" style="display:none"></div>
   <div class="era-stats" id="era-stats" style="display:none">
@@ -541,6 +544,17 @@ function selectEra(era) {
     btnDetail.textContent = '詳細を見る ▼';
   } else {
     btnDetail.style.display = 'none';
+  }
+
+  const eraMapUrls = {
+    edo: 'https://rekichizu.jp/map?center=139.76%2C35.67&zoom=9&pitch=0&bearing=0&base=rekichizu&appendix_nrct=true&appendix_owariya=true',
+  };
+  const btnEraMap = document.getElementById('btn-era-map');
+  if (eraMapUrls[era.code]) {
+    btnEraMap.href = eraMapUrls[era.code];
+    btnEraMap.style.display = 'inline-block';
+  } else {
+    btnEraMap.style.display = 'none';
   }
 
   const imgWrap = document.getElementById('era-img-wrap');
