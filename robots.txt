@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /admin-events.html
+Disallow: /board.html
+
+Sitemap: https://uktoshi.github.io/rekisaku/sitemap.xml
