@@ -115,11 +115,18 @@ header{background:linear-gradient(135deg,#6c63ff 0%,#ff6584 100%);color:#fff;pad
 .stat-life{display:flex;flex-direction:column;gap:.2rem;align-items:center}
 
 /* フィルター行 */
-.filters{padding:.75rem 1.5rem;display:flex;gap:.5rem;flex-wrap:wrap;border-bottom:2px solid var(--border);background:#fff}
+.filters{padding:.75rem 1.5rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;border-bottom:2px solid var(--border);background:#fff}
 .filter-btn{font-size:.78rem;padding:.35rem .85rem;border-radius:20px;border:2px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;font-family:var(--sans);transition:all .15s;font-weight:500}
 .filter-btn:hover{border-color:var(--primary);color:var(--primary);background:rgba(108,99,255,.05)}
 .filter-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600;box-shadow:0 2px 8px rgba(108,99,255,.3)}
 .filter-sep{width:1px;background:var(--border);margin:.1rem 0;align-self:stretch}
+/* キーワード検索 */
+.search-bar{padding:.5rem 1.5rem;background:#fff;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:.5rem}
+.search-input{flex:1;font-size:.85rem;padding:.4rem .85rem;border-radius:20px;border:2px solid var(--border);font-family:var(--sans);color:var(--text);outline:none;transition:border-color .15s;background:#fafbff}
+.search-input:focus{border-color:var(--primary);background:#fff}
+.search-input::placeholder{color:var(--muted)}
+.search-clear{font-size:.75rem;padding:.35rem .75rem;border-radius:20px;border:2px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;font-family:var(--sans);white-space:nowrap;transition:all .15s}
+.search-clear:hover{border-color:#e53e3e;color:#e53e3e}
 
 /* インフラ分類フィルター */
 .infra-filter-bar{
@@ -330,16 +337,21 @@ footer{text-align:center;padding:2rem;font-size:.75rem;color:var(--muted);border
   </div>
 </div>
 
-<!-- 地域・無料フィルター -->
+<!-- 地域フィルター -->
 <div class="filters" id="filters">
   <button class="filter-btn active" data-pref="">全地域</button>
+  <button class="filter-btn" data-pref="関東">関東</button>
   <div class="filter-sep"></div>
   <button class="filter-btn" data-pref="東京">東京</button>
   <button class="filter-btn" data-pref="神奈川">神奈川</button>
   <button class="filter-btn" data-pref="千葉">千葉</button>
   <button class="filter-btn" data-pref="埼玉">埼玉</button>
-  <div class="filter-sep"></div>
-  <button class="filter-btn" id="free-only-btn" data-free="0">無料のみ</button>
+</div>
+
+<!-- キーワード検索 -->
+<div class="search-bar">
+  <input class="search-input" id="search-input" type="text" placeholder="施設名・説明でキーワード検索…" autocomplete="off">
+  <button class="search-clear" id="search-clear" style="display:none">クリア</button>
 </div>
 
 <!-- 社会インフラ分類フィルター（令和選択時のみ表示） -->
@@ -405,8 +417,9 @@ let spotEraMap  = {};
 let spotTagMap  = {};
 let currentEra  = null;
 let currentPref = '';
-let freeOnly    = false;
+let currentKeyword = '';
 let selectedInfra = '';
+const KANTO_PREFS = new Set(['東京', '神奈川', '千葉', '埼玉']);
 
 function updateEraImage(era) {
   if (!currentEra || currentEra.id !== era.id) return;
@@ -699,8 +712,18 @@ function renderSpots() {
       .map(([id]) => id)
   );
   let filtered = allSpots.filter(s => eraSpotIds.has(s.id));
-  if (currentPref) filtered = filtered.filter(s => s.prefectures?.name === currentPref);
-  if (freeOnly)    filtered = filtered.filter(s => s.is_free);
+  if (currentPref === '関東') {
+    filtered = filtered.filter(s => KANTO_PREFS.has(s.prefectures?.name));
+  } else if (currentPref) {
+    filtered = filtered.filter(s => s.prefectures?.name === currentPref);
+  }
+  if (currentKeyword) {
+    const kw = currentKeyword.toLowerCase();
+    filtered = filtered.filter(s =>
+      (s.name || '').toLowerCase().includes(kw) ||
+      (s.description || '').toLowerCase().includes(kw)
+    );
+  }
 
   if (currentEra?.code === 'gendai' && selectedInfra) {
     filtered = filtered.filter(s => s.infra_category === selectedInfra);
@@ -788,15 +811,24 @@ function closeModal(e) {
 
 document.getElementById('filters').addEventListener('click', e => {
   const btn = e.target.closest('.filter-btn');
-  if (!btn) return;
-  if (btn.id === 'free-only-btn') {
-    freeOnly = !freeOnly;
-    btn.classList.toggle('active', freeOnly);
-  } else if (btn.dataset.pref !== undefined) {
-    document.querySelectorAll('[data-pref]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentPref = btn.dataset.pref;
-  }
+  if (!btn || btn.dataset.pref === undefined) return;
+  document.querySelectorAll('[data-pref]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentPref = btn.dataset.pref;
+  renderSpots();
+});
+
+const searchInput = document.getElementById('search-input');
+const searchClear = document.getElementById('search-clear');
+searchInput.addEventListener('input', () => {
+  currentKeyword = searchInput.value.trim();
+  searchClear.style.display = currentKeyword ? 'inline-block' : 'none';
+  renderSpots();
+});
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  currentKeyword = '';
+  searchClear.style.display = 'none';
   renderSpots();
 });
 
