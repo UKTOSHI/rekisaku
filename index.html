@@ -469,31 +469,56 @@ function setTrendEl(id, current, previous) {
   el.className = 'trend-arrow ' + cls;
 }
 
-async function init() {
-  const [
-    { data: eraData },
-    { data: spotData },
-    { data: seData },
-    { data: stData }
-  ] = await Promise.all([
-    db.from('eras').select('*').order('sort_order'),
-    db.from('spots').select('*, prefectures(name), infra_category').eq('status', true),
-    db.from('spot_eras').select('spot_id, eras(code, name_ja, color_hex)'),
-    db.from('spot_tags').select('spot_id, tags(name, category)')
-  ]);
+const CACHE_KEY = 'rekisaku_appdata';
+const CACHE_TTL = 5 * 60 * 1000; // 5分
 
-  eras = eraData || [];
-  allSpots = spotData || [];
-  (seData || []).forEach(r => {
+function loadCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { ts, data } = JSON.parse(raw);
+    if (Date.now() - ts > CACHE_TTL) return null;
+    return data;
+  } catch { return null; }
+}
+
+function saveCache(data) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch {}
+}
+
+function applyData(d) {
+  eras = d.eras || [];
+  allSpots = d.spots || [];
+  spotEraMap = {};
+  spotTagMap = {};
+  (d.spot_eras || []).forEach(r => {
     if (!spotEraMap[r.spot_id]) spotEraMap[r.spot_id] = [];
     spotEraMap[r.spot_id].push(r.eras);
   });
-  (stData || []).forEach(r => {
+  (d.spot_tags || []).forEach(r => {
     if (!spotTagMap[r.spot_id]) spotTagMap[r.spot_id] = [];
     spotTagMap[r.spot_id].push(r.tags.name);
   });
+}
 
-  fetchWikipediaThumbnails(); // 画像は非同期でバックグラウンド取得
+async function init() {
+  const cached = loadCache();
+  if (cached) {
+    applyData(cached);
+    buildEraTabs();
+    if (eras.length) selectEra(eras[0]);
+    // バックグラウンドで最新データを取得してキャッシュ更新
+    db.rpc('get_app_data').then(({ data }) => { if (data) saveCache(data); });
+    return;
+  }
+
+  const { data } = await db.rpc('get_app_data');
+  if (data) {
+    saveCache(data);
+    applyData(data);
+  }
+
+  fetchWikipediaThumbnails();
   buildEraTabs();
   if (eras.length) selectEra(eras[0]);
 }
