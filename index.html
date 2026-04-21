@@ -507,7 +507,11 @@ async function init() {
     applyData(cached);
     buildEraTabs();
     if (eras.length) selectEra(eras[0]);
-    // バックグラウンドで最新データを取得してキャッシュ更新
+    fetchWikipediaThumbnails().then(() => {
+      // 解決済み画像URLをキャッシュに保存
+      const updated = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
+      if (updated.data) { updated.data.eras = eras; localStorage.setItem(CACHE_KEY, JSON.stringify(updated)); }
+    });
     db.rpc('get_app_data').then(({ data }) => { if (data) saveCache(data); });
     return;
   }
@@ -518,9 +522,12 @@ async function init() {
     applyData(data);
   }
 
-  fetchWikipediaThumbnails();
   buildEraTabs();
   if (eras.length) selectEra(eras[0]);
+  fetchWikipediaThumbnails().then(() => {
+    const updated = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
+    if (updated.data) { updated.data.eras = eras; localStorage.setItem(CACHE_KEY, JSON.stringify(updated)); }
+  });
 }
 
 function buildEraTabs() {
