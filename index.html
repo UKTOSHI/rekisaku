@@ -831,7 +831,7 @@ function openModal(s) {
   }
   const erasEl = document.getElementById('m-eras');
   erasEl.innerHTML = eras2.map(e =>
-    `<span class="era-chip" style="color:${e.color_hex};border-color:${e.color_hex}">${e.name_ja}時代</span>`
+    `<span class="era-chip" style="color:${e.color_hex};border-color:${e.color_hex}">${e.name_ja.endsWith('時代') ? e.name_ja : e.name_ja + '時代'}</span>`
   ).join('');
   document.getElementById('modal').classList.add('open');
 }
