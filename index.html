@@ -776,7 +776,8 @@ function renderSpots() {
     const tags  = spotTagMap[s.id] || [];
     const card  = document.createElement('div');
     const isRecommend = tags.includes('おすすめ');
-    card.className = 'spot-card' + (isRecommend ? ' recommend' : '') + (!s.prefectures ? ' outside-kanto' : '');
+    const isOutsideKanto = s.prefectures && !KANTO_PREFS.has(s.prefectures.name);
+    card.className = 'spot-card' + (isRecommend ? ' recommend' : '') + (isOutsideKanto ? ' outside-kanto' : '');
     card.onclick   = () => openModal(s);
     const tagHtml = tags.map(t => {
       let cls = 'tag';

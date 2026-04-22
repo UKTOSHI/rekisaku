@@ -24,6 +24,7 @@
 
 | code | name_ja |
 |------|---------|
+| `geological` | 地質時代 |
 | `paleolithic` | 旧石器 |
 | `jomon` | 縄文 |
 | `yayoi` | 弥生 |
@@ -41,9 +42,19 @@
 | `heisei` | 平成 |
 | `gendai` | 令和 |
 
+## スポット評価ルール
+
+- Google の星評価 **4.0 以上** → レキサク評価 **3**
+- Google の星評価 **4.0 未満** → レキサク評価 **2**
+
 ## フロントエンド
 
 - メインページ: `index.html`
 - 管理画面: `admin.html`（パスワード: rekisaku2025）
 - 15財閥ページ: `zaibatsu.html`
 - 15財閥リンクは明治以降の時代のみ表示（`zaibatsu-bar` div を JS で show/hide）
+
+## スポットカード表示ルール
+
+- 関東外（東京・神奈川・千葉・埼玉以外）のスポットは背景を赤（`outside-kanto` クラス）にする
+  - 関東外判定: `s.prefectures` が存在し、かつ `KANTO_PREFS`（上記4都県）に含まれない場合
