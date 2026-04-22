@@ -665,7 +665,7 @@ function selectEra(era) {
       lifeEl.style.alignItems = 'center';
       lifeEl.style.gap = '0.2rem';
       document.getElementById('life-val').textContent = era.life_expectancy;
-      if (era.code !== 'paleolithic') {
+      if (era.code !== 'paleolithic' && era.code !== 'geological') {
         setTrendEl('life-trend', parseFloat(era.life_expectancy), parseFloat(prevEra?.life_expectancy));
       } else {
         const lifeTrendEl = document.getElementById('life-trend');
