@@ -574,7 +574,7 @@ function selectEra(era) {
   }
 
   const meta = document.getElementById('era-meta');
-  meta.querySelector('.era-meta-name').textContent = era.name_ja + '時代';
+  meta.querySelector('.era-meta-name').textContent = era.name_ja.endsWith('時代') ? era.name_ja : era.name_ja + '時代';
   meta.querySelector('.era-meta-name').style.color = era.color_hex || '#c8b89a';
   meta.querySelector('.era-period').textContent = era.period;
   const fullDesc = era.description || '';
