@@ -49,9 +49,12 @@
 body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
 
 /* ヘッダー */
-header{background:linear-gradient(135deg,#6c63ff 0%,#ff6584 100%);color:#fff;padding:1.25rem 1.5rem;display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap;box-shadow:0 4px 16px rgba(108,99,255,.3)}
-.site-name{font-family:var(--serif);font-size:2.25rem;font-weight:700;letter-spacing:.12em;text-shadow:0 2px 12px rgba(0,0,0,.2)}
-.site-tagline{font-size:.8rem;color:rgba(255,255,255,.9);letter-spacing:.08em;font-weight:500}
+header{position:relative;color:#fff;padding:1.25rem 1.5rem;display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap;box-shadow:0 4px 16px rgba(108,99,255,.3);overflow:hidden;min-height:90px}
+header::before{content:'';position:absolute;inset:0;background:url('AAA.png') center/cover no-repeat;z-index:0}
+header::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(108,99,255,.72) 0%,rgba(255,101,132,.65) 100%);z-index:1}
+header>*{position:relative;z-index:2}
+.site-name{font-family:var(--serif);font-size:2.25rem;font-weight:700;letter-spacing:.12em;text-shadow:0 2px 12px rgba(0,0,0,.4)}
+.site-tagline{font-size:.8rem;color:rgba(255,255,255,.95);letter-spacing:.08em;font-weight:500;text-shadow:0 1px 6px rgba(0,0,0,.3)}
 
 /* 時代タブ */
 .era-bar{background:#fff;border-bottom:2px solid var(--border);overflow-x:auto;scrollbar-width:none;box-shadow:0 2px 8px rgba(108,99,255,.08)}
