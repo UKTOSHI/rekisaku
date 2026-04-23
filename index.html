@@ -51,10 +51,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 /* ヘッダー */
 header{position:relative;color:#fff;padding:1.25rem 1.5rem;display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap;box-shadow:0 4px 16px rgba(108,99,255,.3);overflow:hidden;min-height:90px}
 header::before{content:'';position:absolute;inset:0;background:url('AAA.png') center/cover no-repeat;z-index:0}
-header::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(108,99,255,.72) 0%,rgba(255,101,132,.65) 100%);z-index:1}
 header>*{position:relative;z-index:2}
-.site-name{font-family:var(--serif);font-size:2.25rem;font-weight:700;letter-spacing:.12em;text-shadow:0 2px 12px rgba(0,0,0,.4)}
-.site-tagline{font-size:.8rem;color:rgba(255,255,255,.95);letter-spacing:.08em;font-weight:500;text-shadow:0 1px 6px rgba(0,0,0,.3)}
+.site-name{font-family:var(--serif);font-size:2.7rem;font-weight:700;letter-spacing:.12em;color:#111;text-shadow:0 1px 4px rgba(255,255,255,.6)}
+.site-tagline{font-size:.96rem;letter-spacing:.08em;font-weight:500}
+.site-tagline .kana{color:#1a56db}
+.site-tagline .sub{color:#e02424}
 
 /* 時代タブ */
 .era-bar{background:#fff;border-bottom:2px solid var(--border);overflow-x:auto;scrollbar-width:none;box-shadow:0 2px 8px rgba(108,99,255,.08)}
@@ -251,8 +252,8 @@ footer{text-align:center;padding:2rem;font-size:.75rem;color:var(--muted);border
 <body>
 
 <header>
-  <div class="site-name">歴索</div>
-  <div class="site-tagline">レキサク — 歴史時代別 社会科見学スポット</div>
+  <div class="site-name" style="background:rgba(255,255,255,.85);padding:.08em .2em;border-radius:4px;display:inline-block;line-height:1">歴索</div>
+  <div class="site-tagline" style="background:rgba(255,255,255,.85);padding:.15em .5em;border-radius:6px"><span class="kana">レキサク</span> <span class="sub">— 歴史時代別 社会科見学スポット</span></div>
 </header>
 
 <nav class="era-bar">
