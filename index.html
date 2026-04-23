@@ -584,7 +584,7 @@ function selectEra(era) {
   meta.querySelector('.era-desc').innerHTML = summaryHtml;
   const detailEl = document.getElementById('era-desc-detail');
   const btnDetail = document.getElementById('btn-detail');
-  detailEl.innerHTML = detailHtml.replace(/【/g, '<br>【').replace(/】/g, '】<br>').replace(/^<br>/, '');
+  detailEl.innerHTML = detailHtml.replace(/【/g, '<br><br>【').replace(/】/g, '】<br>').replace(/^<br><br>/, '');
   detailEl.classList.remove('open');
   if (detailHtml) {
     btnDetail.style.display = 'inline-block';
