@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>首都圏イベント検索 — 歴索</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --primary: #6c63ff;
+  --gold:    #ffb347;
+  --bg:      #f0f4ff;
+  --white:   #ffffff;
+  --text:    #2d3748;
+  --muted:   #718096;
+  --light:   #edf2f7;
+  --border:  #e2e8f0;
+  --serif:   'Noto Serif JP', serif;
+  --sans:    'Noto Sans JP', sans-serif;
+  --radius:  12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+
+header{position:relative;color:#fff;padding:1.25rem 1.5rem;display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap;box-shadow:0 4px 16px rgba(108,99,255,.3);overflow:hidden;min-height:90px}
+header::before{content:'';position:absolute;inset:0;background:url('AAA.png') center/cover no-repeat;z-index:0}
+header>*{position:relative;z-index:2}
+.site-name{font-family:var(--serif);font-size:2.7rem;font-weight:700;letter-spacing:.12em;color:#111;text-shadow:0 1px 4px rgba(255,255,255,.6);background:rgba(255,255,255,.85);padding:.08em .2em;border-radius:4px;line-height:1;text-decoration:none;display:inline-block}
+.site-tagline{font-size:.96rem;letter-spacing:.08em;font-weight:500;background:rgba(255,255,255,.85);padding:.15em .5em;border-radius:6px;color:#555}
+
+.sub-nav{background:#fff;border-bottom:2px solid var(--border);padding:.4rem 1rem;display:flex;gap:.25rem;align-items:center}
+.sub-nav a{font-size:.78rem;color:var(--muted);text-decoration:none;padding:.35rem .7rem;border-radius:20px;transition:background .15s,color .15s}
+.sub-nav a:hover{background:var(--light);color:var(--primary)}
+.sub-nav a.active{background:var(--primary);color:#fff;font-weight:600}
+
+.main{max-width:960px;margin:0 auto;padding:1.5rem}
+
+.page-heading{
+  font-family:var(--serif);font-size:1.35rem;font-weight:700;
+  color:var(--primary);margin-bottom:.3rem;
+  display:flex;align-items:center;gap:.5rem;
+}
+.page-heading::before{content:'';display:inline-block;width:4px;height:1.2em;background:var(--gold);border-radius:2px}
+.page-sub{font-size:.78rem;color:var(--muted);margin-bottom:1.5rem}
+
+/* 検索フォーム */
+.search-box{
+  background:var(--white);border-radius:var(--radius);
+  border:1px solid var(--border);
+  padding:1.25rem 1.5rem;
+  display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;
+  margin-bottom:1.5rem;
+  box-shadow:0 2px 8px rgba(108,99,255,.07);
+}
+.field{display:flex;flex-direction:column;gap:.3rem;flex:1;min-width:140px}
+.field label{font-size:.72rem;color:var(--muted);letter-spacing:.04em;font-weight:500}
+.field select, .field input{
+  padding:.5rem .75rem;border:1.5px solid var(--border);border-radius:8px;
+  font-size:.88rem;font-family:var(--sans);color:var(--text);
+  background:#fff;outline:none;transition:border-color .15s;
+}
+.field select:focus, .field input:focus{border-color:var(--primary)}
+.search-btn{
+  padding:.55rem 1.5rem;border:none;border-radius:8px;
+  background:var(--primary);color:#fff;
+  font-size:.88rem;font-weight:600;font-family:var(--sans);
+  cursor:pointer;transition:background .15s;white-space:nowrap;
+  align-self:flex-end;
+}
+.search-btn:hover{background:#5a52d5}
+
+/* 結果カウント */
+.result-meta{font-size:.78rem;color:var(--muted);margin-bottom:1rem;min-height:1.4em}
+
+/* イベントグリッド */
+.events-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+
+/* カード */
+.event-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;
+  display:flex;flex-direction:column;
+  transition:box-shadow .15s,transform .1s;
+}
+.event-card:hover{box-shadow:0 6px 20px rgba(108,99,255,.13);transform:translateY(-2px)}
+
+.card-top{
+  padding:.65rem 1rem;background:var(--light);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;
+}
+.cat-badge{
+  font-size:.65rem;font-weight:600;padding:.18rem .55rem;border-radius:20px;
+  border:1px solid;white-space:nowrap;
+}
+.cat-祭り{background:#fff0f5;color:#c0175d;border-color:#f0a0c0}
+.cat-花火{background:#fff8e8;color:#a06010;border-color:#f0c060}
+.cat-スポーツ{background:#e8f5e8;color:#1e6a3a;border-color:#90d0a0}
+.cat-展示{background:#e8f0ff;color:#2a4ab0;border-color:#90aaee}
+.cat-自然・花{background:#f0ffe8;color:#2a6a10;border-color:#90d060}
+.cat-イルミネーション{background:#f0e8ff;color:#6020a0;border-color:#c090f0}
+.cat-映画・文化{background:#fff0e8;color:#a03010;border-color:#f0a070}
+.cat-default{background:#f0f0f0;color:#555;border-color:#ccc}
+
+.area-tag{
+  font-size:.68rem;padding:.18rem .55rem;border-radius:20px;
+  background:#e8f0ff;color:#2a4ab0;border:1px solid #90aaee;
+  margin-left:auto;white-space:nowrap;font-weight:600;
+}
+.period-badge{
+  font-size:.72rem;color:var(--muted);white-space:nowrap;
+  display:flex;align-items:center;gap:.25rem;
+}
+.period-badge::before{content:'📅';font-size:.65rem}
+
+.card-body{padding:.85rem 1rem 1rem;display:flex;flex-direction:column;flex:1;gap:.5rem}
+.event-name{font-family:var(--serif);font-size:1rem;font-weight:600;color:var(--text);line-height:1.5}
+.event-desc{font-size:.78rem;color:#555;line-height:1.7;flex:1}
+.venue-row{font-size:.74rem;color:var(--muted);display:flex;align-items:baseline;gap:.35rem}
+.venue-row::before{content:'📍';font-size:.66rem;flex-shrink:0}
+
+.url-btn{
+  display:inline-block;margin-top:.6rem;
+  font-size:.78rem;font-weight:600;
+  padding:.42rem 1.1rem;border-radius:20px;
+  background:var(--primary);color:#fff;
+  text-decoration:none;transition:background .15s;
+  text-align:center;
+}
+.url-btn:hover{background:#5a52d5}
+.free-badge{
+  font-size:.65rem;padding:.14rem .5rem;border-radius:20px;
+  background:#e8f5ee;color:#1e7a47;border:1px solid #7ecda0;
+  white-space:nowrap;font-weight:600;align-self:flex-start;
+}
+
+.state-msg{text-align:center;padding:3rem 1rem;color:var(--muted);font-size:.88rem}
+.loading-dots{display:inline-flex;gap:.3rem}
+.loading-dots span{width:6px;height:6px;border-radius:50%;background:var(--primary);opacity:.4;animation:bounce .8s infinite}
+.loading-dots span:nth-child(2){animation-delay:.15s}
+.loading-dots span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,100%{opacity:.2;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+
+footer{text-align:center;padding:2rem;font-size:.72rem;color:var(--muted);border-top:2px solid var(--border);margin-top:2rem;background:#fff}
+
+@media(max-width:600px){
+  .main{padding:1rem}
+  .events-grid{grid-template-columns:1fr}
+  .search-box{padding:1rem}
+  header{padding:1rem}
+  .site-name{font-size:1.8rem}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/index.html" class="site-name">歴索</a>
+  <div class="site-tagline">レキサク — 歴史時代別 社会科見学スポット</div>
+</header>
+
+<nav class="sub-nav">
+  <a href="/index.html">スポット検索</a>
+  <a href="/metro-events.html" class="active">首都圏イベント</a>
+  <a href="/events.html">サークルイベント</a>
+  <a href="/board.html">掲示板</a>
+</nav>
+
+<main class="main">
+  <div class="page-heading">首都圏イベント検索</div>
+  <div class="page-sub">東京・横浜エリアで毎年開催される主なイベントを月・エリアで検索できます</div>
+
+  <div class="search-box">
+    <div class="field">
+      <label>エリア</label>
+      <select id="sel-area">
+        <option value="">すべてのエリア</option>
+        <option value="東京">東京</option>
+        <option value="横浜">横浜</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>月</label>
+      <select id="sel-month">
+        <option value="">すべての月</option>
+        <option value="1">1月</option>
+        <option value="2">2月</option>
+        <option value="3">3月</option>
+        <option value="4">4月</option>
+        <option value="5">5月</option>
+        <option value="6">6月</option>
+        <option value="7">7月</option>
+        <option value="8">8月</option>
+        <option value="9">9月</option>
+        <option value="10">10月</option>
+        <option value="11">11月</option>
+        <option value="12">12月</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>カテゴリ</label>
+      <select id="sel-cat">
+        <option value="">すべてのカテゴリ</option>
+        <option value="祭り">祭り</option>
+        <option value="花火">花火</option>
+        <option value="スポーツ">スポーツ</option>
+        <option value="展示">展示</option>
+        <option value="自然・花">自然・花</option>
+        <option value="イルミネーション">イルミネーション</option>
+        <option value="映画・文化">映画・文化</option>
+      </select>
+    </div>
+    <button class="search-btn" id="search-btn">検索</button>
+  </div>
+
+  <div class="result-meta" id="result-meta"></div>
+  <div class="events-grid" id="events-grid">
+    <div class="state-msg" style="grid-column:1/-1">
+      <div class="loading-dots"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+</main>
+
+<footer>&copy; 2026 Produced by <a href="https://asst2022.wixsite.com/home" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:none">サークルアスト</a></footer>
+
+<script>
+const SUPABASE_URL = 'https://sunxpjbdvidftukiutxg.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1bnhwamJkdmlkZnR1a2l1dHhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4MzE0NTMsImV4cCI6MjA1OTQwNzQ1M30.1k9jCdbWD8J2I4Gff7N4tP65RFg3Mc2KoNXi3LFj7Yk';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let allEvents = [];
+
+async function loadAllEvents() {
+  const { data, error } = await sb
+    .from('public_events')
+    .select('*')
+    .order('month_start')
+    .order('name');
+
+  if (error) {
+    document.getElementById('events-grid').innerHTML =
+      '<div class="state-msg" style="grid-column:1/-1">データの取得に失敗しました</div>';
+    return;
+  }
+  allEvents = data || [];
+  renderEvents(allEvents);
+}
+
+function filterEvents() {
+  const area  = document.getElementById('sel-area').value;
+  const month = parseInt(document.getElementById('sel-month').value) || null;
+  const cat   = document.getElementById('sel-cat').value;
+
+  return allEvents.filter(e => {
+    if (area && e.area !== area) return false;
+    if (cat  && e.category !== cat) return false;
+    if (month) {
+      const start = e.month_start;
+      const end   = e.month_end || e.month_start;
+      // 年をまたぐ場合（例: 11〜2月）
+      if (start <= end) {
+        if (month < start || month > end) return false;
+      } else {
+        if (month < start && month > end) return false;
+      }
+    }
+    return true;
+  });
+}
+
+function catClass(cat) {
+  const map = {
+    '祭り':'祭り','花火':'花火','スポーツ':'スポーツ',
+    '展示':'展示','自然・花':'自然・花',
+    'イルミネーション':'イルミネーション','映画・文化':'映画・文化'
+  };
+  return 'cat-' + (map[cat] || 'default');
+}
+
+function renderEvents(events) {
+  const grid = document.getElementById('events-grid');
+  const meta = document.getElementById('result-meta');
+
+  if (!events.length) {
+    grid.innerHTML = '<div class="state-msg" style="grid-column:1/-1">条件に合うイベントが見つかりませんでした</div>';
+    meta.textContent = '0件';
+    return;
+  }
+
+  meta.textContent = events.length + '件のイベントが見つかりました';
+  grid.innerHTML = '';
+
+  events.forEach(e => {
+    const card = document.createElement('div');
+    card.className = 'event-card';
+
+    const urlBtn = e.website_url
+      ? `<a class="url-btn" href="${e.website_url}" target="_blank" rel="noopener">公式サイトへ →</a>`
+      : '';
+
+    const freeBadge = e.is_free ? '<span class="free-badge">無料</span>' : '';
+
+    card.innerHTML = `
+      <div class="card-top">
+        <span class="cat-badge ${catClass(e.category)}">${e.category || 'その他'}</span>
+        <span class="period-badge">${e.period_text || e.month_start + '月'}</span>
+        <span class="area-tag">${e.area}</span>
+      </div>
+      <div class="card-body">
+        <div class="event-name">${e.name}</div>
+        ${freeBadge}
+        <div class="event-desc">${e.description || ''}</div>
+        ${e.venue ? `<div class="venue-row">${e.venue}</div>` : ''}
+        ${urlBtn}
+      </div>`;
+
+    grid.appendChild(card);
+  });
+}
+
+document.getElementById('search-btn').addEventListener('click', () => {
+  renderEvents(filterEvents());
+});
+
+// Enterキーでも検索
+['sel-area','sel-month','sel-cat'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    renderEvents(filterEvents());
+  });
+});
+
+// URLパラメータで初期検索（例: ?area=東京&month=5）
+(function applyUrlParams() {
+  const params = new URLSearchParams(location.search);
+  const area  = params.get('area');
+  const month = params.get('month');
+  const cat   = params.get('category');
+  if (area)  document.getElementById('sel-area').value  = area;
+  if (month) document.getElementById('sel-month').value = month;
+  if (cat)   document.getElementById('sel-cat').value   = cat;
+})();
+
+loadAllEvents();
+</script>
+</body>
+</html>
