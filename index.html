@@ -621,23 +621,22 @@ function selectEra(era) {
     btnEraMap.style.display = 'none';
   }
 
-  const B = 'https://online.bunka.go.jp/heritages/search?freetext=&title=&artist=&';
-  const BS = '&prefecture_cd=&city_code=&museum=&indexNum=20&sorttype=_';
+  const BUNKA = 'https://online.bunka.go.jp/heritages/search?era_';
   const bunkaUrls = {
-    paleolithic: B + 'era_1=1'  + BS,
-    jomon:       B + 'era_2=1'  + BS,
-    yayoi:       B + 'era_3=1'  + BS,
-    kofun:       B + 'era_4=1'  + BS,
-    nara:        B + 'era_6=1'  + BS,
-    heian:       B + 'era_7=1'  + BS,
-    kamakura:    B + 'era_8=1'  + BS,
-    muromachi:   B + 'era_10=1' + BS,
-    edo:         B + 'era_12=1' + BS,
-    meiji:       B + 'era_13=1' + BS,
-    taisho:      B + 'era_14=1' + BS,
-    showa_early: B + 'era_15=1' + BS,
-    showa_mid:   B + 'era_15=1' + BS,
-    showa_late:  B + 'era_15=1' + BS,
+    paleolithic: BUNKA + '1=1',
+    jomon:       BUNKA + '2=1',
+    yayoi:       BUNKA + '3=1',
+    kofun:       BUNKA + '4=1',
+    nara:        BUNKA + '6=1',
+    heian:       BUNKA + '7=1',
+    kamakura:    BUNKA + '8=1',
+    muromachi:   BUNKA + '10=1',
+    edo:         BUNKA + '12=1',
+    meiji:       BUNKA + '13=1',
+    taisho:      BUNKA + '14=1',
+    showa_early: BUNKA + '15=1',
+    showa_mid:   BUNKA + '15=1',
+    showa_late:  BUNKA + '15=1',
   };
   const btnBunka = document.getElementById('btn-bunka');
   if (bunkaUrls[era.code]) {
