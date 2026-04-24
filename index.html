@@ -621,21 +621,23 @@ function selectEra(era) {
     btnEraMap.style.display = 'none';
   }
 
+  const B = 'https://online.bunka.go.jp/heritages/search?freetext=&title=&artist=&';
+  const BS = '&prefecture_cd=&city_code=&museum=&indexNum=20&sorttype=_';
   const bunkaUrls = {
-    paleolithic: 'https://online.bunka.go.jp/heritages/search/from:menu/era_6:1',
-    jomon:       'https://online.bunka.go.jp/heritages/search/from:menu/era_6:2',
-    yayoi:       'https://online.bunka.go.jp/heritages/search/from:menu/era_6:3',
-    kofun:       'https://online.bunka.go.jp/heritages/search/from:menu/era_6:4',
-    nara:        'https://online.bunka.go.jp/heritages/search/from:menu/era_6:6',
-    heian:       'https://online.bunka.go.jp/heritages/search/from:menu/era_6:7',
-    kamakura:    'https://online.bunka.go.jp/heritages/search/from:menu/era_6:8',
-    muromachi:   'https://online.bunka.go.jp/heritages/search/from:menu/era_6:10',
-    edo:         'https://online.bunka.go.jp/heritages/search/from:menu/era_6:12',
-    meiji:       'https://online.bunka.go.jp/heritages/search/from:menu/era_6:13',
-    taisho:      'https://online.bunka.go.jp/heritages/search/from:menu/era_6:14',
-    showa_early: 'https://online.bunka.go.jp/heritages/search/from:menu/era_6:15',
-    showa_mid:   'https://online.bunka.go.jp/heritages/search/from:menu/era_6:15',
-    showa_late:  'https://online.bunka.go.jp/heritages/search/from:menu/era_6:15',
+    paleolithic: B + 'era_1=1'  + BS,
+    jomon:       B + 'era_2=1'  + BS,
+    yayoi:       B + 'era_3=1'  + BS,
+    kofun:       B + 'era_4=1'  + BS,
+    nara:        B + 'era_6=1'  + BS,
+    heian:       B + 'era_7=1'  + BS,
+    kamakura:    B + 'era_8=1'  + BS,
+    muromachi:   B + 'era_10=1' + BS,
+    edo:         B + 'era_12=1' + BS,
+    meiji:       B + 'era_13=1' + BS,
+    taisho:      B + 'era_14=1' + BS,
+    showa_early: B + 'era_15=1' + BS,
+    showa_mid:   B + 'era_15=1' + BS,
+    showa_late:  B + 'era_15=1' + BS,
   };
   const btnBunka = document.getElementById('btn-bunka');
   if (bunkaUrls[era.code]) {
