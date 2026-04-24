@@ -288,6 +288,7 @@ footer{text-align:center;padding:2rem;font-size:.75rem;color:var(--muted);border
   <div class="era-desc-detail" id="era-desc-detail"></div>
   <button class="btn-detail" id="btn-detail" style="display:none" onclick="toggleEraDetail()">詳細を見る ▼</button>
   <a class="btn-era-map" id="btn-era-map" href="#" target="_blank" rel="noopener" style="display:none">🗺️ 地図で見る</a>
+  <a class="btn-era-map" id="btn-bunka" href="#" target="_blank" rel="noopener" style="display:none">🏛️ 文化財オンライン</a>
   <div id="score-badge-wrap" style="display:none;margin-bottom:.5rem"><span class="score-badge" id="score-badge"></span></div>
   <div class="era-tech" id="era-tech" style="display:none"></div>
   <div class="era-stats" id="era-stats" style="display:none">
@@ -618,6 +619,30 @@ function selectEra(era) {
     btnEraMap.style.display = 'inline-block';
   } else {
     btnEraMap.style.display = 'none';
+  }
+
+  const bunkaUrls = {
+    paleolithic: 'https://online.bunka.go.jp/heritages/search/from:menu/era_6:1',
+    jomon:       'https://online.bunka.go.jp/heritages/search/from:menu/era_6:2',
+    yayoi:       'https://online.bunka.go.jp/heritages/search/from:menu/era_6:3',
+    kofun:       'https://online.bunka.go.jp/heritages/search/from:menu/era_6:4',
+    nara:        'https://online.bunka.go.jp/heritages/search/from:menu/era_6:6',
+    heian:       'https://online.bunka.go.jp/heritages/search/from:menu/era_6:7',
+    kamakura:    'https://online.bunka.go.jp/heritages/search/from:menu/era_6:8',
+    muromachi:   'https://online.bunka.go.jp/heritages/search/from:menu/era_6:10',
+    edo:         'https://online.bunka.go.jp/heritages/search/from:menu/era_6:12',
+    meiji:       'https://online.bunka.go.jp/heritages/search/from:menu/era_6:13',
+    taisho:      'https://online.bunka.go.jp/heritages/search/from:menu/era_6:14',
+    showa_early: 'https://online.bunka.go.jp/heritages/search/from:menu/era_6:15',
+    showa_mid:   'https://online.bunka.go.jp/heritages/search/from:menu/era_6:15',
+    showa_late:  'https://online.bunka.go.jp/heritages/search/from:menu/era_6:15',
+  };
+  const btnBunka = document.getElementById('btn-bunka');
+  if (bunkaUrls[era.code]) {
+    btnBunka.href = bunkaUrls[era.code];
+    btnBunka.style.display = 'inline-block';
+  } else {
+    btnBunka.style.display = 'none';
   }
 
   const imgWrap = document.getElementById('era-img-wrap');
