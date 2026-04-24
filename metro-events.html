@@ -243,7 +243,7 @@ async function loadAllEvents() {
     return;
   }
   allEvents = data || [];
-  renderEvents(allEvents);
+  renderEvents(filterEvents());
 }
 
 function filterEvents() {
