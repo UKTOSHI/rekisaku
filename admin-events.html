@@ -506,6 +506,8 @@ async function deletePublicEvent(id, name) {
   loadPublicEvents();
 }
 
+let peEventMap = {};
+
 async function loadPublicEvents() {
   const area = document.getElementById('pe-saved-area');
   if (!area) return;
@@ -517,8 +519,12 @@ async function loadPublicEvents() {
   }
   if (!data || !data.length) {
     area.innerHTML = '<div class="state-msg">データがありません</div>';
+    peEventMap = {};
     return;
   }
+  peEventMap = {};
+  data.forEach(e => { peEventMap[e.id] = e; });
+
   const MONTHS = ['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
   area.innerHTML =
     '<div style="font-size:.72rem;color:var(--muted);margin-bottom:.6rem">' + data.length + ' 件</div>' +
@@ -535,12 +541,20 @@ async function loadPublicEvents() {
         '<td title="' + (e.venue||'') + '">' + (e.venue || '—') + '</td>' +
         '<td>' + (e.is_free ? '<span class="tag-sm tag-free">無料</span>' : '') + '</td>' +
         '<td class="act-cell">' +
-        '<button class="btn-sm-del" style="margin-right:.35rem;background:transparent;color:#2a6eb0;border-color:#2a6eb0" onclick="editPublicEvent(' + JSON.stringify(e).replace(/</g,'\\u003c') + ')">編集</button>' +
-        '<button class="btn-sm-del" onclick="deletePublicEvent(\'' + e.id + '\',\'' + e.name.replace(/'/g,"\\'") + '\')">削除</button>' +
+        '<button class="btn-sm-del" style="margin-right:.35rem;background:transparent;color:#2a6eb0;border-color:#2a6eb0" data-edit-id="' + e.id + '">編集</button>' +
+        '<button class="btn-sm-del" data-del-id="' + e.id + '" data-del-name="' + e.name.replace(/"/g,'&quot;') + '">削除</button>' +
         '</td>' +
         '</tr>';
     }).join('') +
     '</tbody></table></div>';
+
+  // イベント委任でボタン処理
+  area.querySelector('table').addEventListener('click', function(ev) {
+    const editId = ev.target.dataset.editId;
+    const delId  = ev.target.dataset.delId;
+    if (editId) editPublicEvent(peEventMap[editId]);
+    if (delId)  deletePublicEvent(delId, ev.target.dataset.delName);
+  });
 }
 
 // ── ログ表示 ─────────────────────────────────────────────────
