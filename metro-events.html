@@ -329,14 +329,14 @@ document.getElementById('search-btn').addEventListener('click', () => {
   });
 });
 
-// URLパラメータで初期検索（例: ?area=東京&month=5）
+// URLパラメータ or 今月で初期設定
 (function applyUrlParams() {
   const params = new URLSearchParams(location.search);
   const area  = params.get('area');
-  const month = params.get('month');
+  const month = params.get('month') || String(new Date().getMonth() + 1);
   const cat   = params.get('category');
   if (area)  document.getElementById('sel-area').value  = area;
-  if (month) document.getElementById('sel-month').value = month;
+  document.getElementById('sel-month').value = month;
   if (cat)   document.getElementById('sel-cat').value   = cat;
 })();
 
