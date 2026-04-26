@@ -89,7 +89,7 @@ header>*{position:relative;z-index:2}
 .card-top{
   padding:.65rem 1rem;background:var(--light);
   border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;
+  display:flex;align-items:center;gap:.5rem;flex-wrap:nowrap;overflow:hidden;
 }
 .cat-badge{
   font-size:.65rem;font-weight:600;padding:.18rem .55rem;border-radius:20px;
@@ -112,6 +112,7 @@ header>*{position:relative;z-index:2}
 .period-badge{
   font-size:.72rem;color:var(--muted);white-space:nowrap;
   display:flex;align-items:center;gap:.25rem;
+  flex:1;min-width:0;overflow:hidden;
 }
 .period-badge::before{content:'📅';font-size:.65rem}
 
