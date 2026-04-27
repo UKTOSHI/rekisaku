@@ -712,8 +712,10 @@ function selectEra(era) {
     showa_late:  BUNKA + '15=1',
   };
   const btnBunka = document.getElementById('btn-bunka');
+  const meijiEras = new Set(['paleolithic','jomon','yayoi','kofun']);
   if (bunkaUrls[era.code]) {
     btnBunka.href = bunkaUrls[era.code];
+    btnBunka.textContent = meijiEras.has(era.code) ? '🏛️ 明治大博物館' : '🏛️ 文化財オンライン';
     btnBunka.style.display = 'inline-block';
   } else {
     btnBunka.style.display = 'none';
