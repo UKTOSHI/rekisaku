@@ -73,9 +73,46 @@ header>*{position:relative;z-index:2}
 .era-bar{background:#fff;border-bottom:2px solid var(--border);overflow-x:auto;scrollbar-width:none;box-shadow:0 2px 8px rgba(108,99,255,.08)}
 .era-bar::-webkit-scrollbar{display:none}
 .era-tabs{display:flex;gap:0;padding:.25rem 1rem;min-width:max-content}
-.era-tab{font-family:var(--serif);font-size:.82rem;color:var(--muted);padding:.6rem .9rem;border:none;background:transparent;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;letter-spacing:.03em;font-weight:500}
-.era-tab:hover{color:var(--primary)}
-.era-tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:700}
+.era-tab{font-family:var(--serif);font-size:.82rem;color:var(--muted);padding:.6rem .9rem;border:none;background:transparent;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s,text-shadow .2s;letter-spacing:.03em;font-weight:500}
+.era-tab:hover{opacity:.85}
+.era-tab.active{border-bottom-width:3px;border-bottom-style:solid}
+
+/* 時代ごとの色・太さ — 技術進化スピードのグラデーション */
+.era-tab[data-code="geological"] {color:#4a4540;font-weight:400;font-size:.78rem}
+.era-tab[data-code="paleolithic"]{color:#5c5248;font-weight:400;font-size:.79rem}
+.era-tab[data-code="jomon"]      {color:#6a5e52;font-weight:400;font-size:.80rem}
+.era-tab[data-code="yayoi"]      {color:#7a6e58;font-weight:400;font-size:.80rem}
+.era-tab[data-code="kofun"]      {color:#8a7a54;font-weight:500;font-size:.80rem}
+.era-tab[data-code="nara"]       {color:#9a8838;font-weight:500;font-size:.81rem}
+.era-tab[data-code="heian"]      {color:#8a8030;font-weight:500;font-size:.81rem}
+.era-tab[data-code="kamakura"]   {color:#5a7838;font-weight:500;font-size:.81rem}
+.era-tab[data-code="muromachi"]  {color:#387858;font-weight:500;font-size:.82rem}
+.era-tab[data-code="edo"]        {color:#287878;font-weight:600;font-size:.82rem}
+.era-tab[data-code="meiji"]      {color:#286890;font-weight:600;font-size:.83rem}
+.era-tab[data-code="taisho"]     {color:#3858a8;font-weight:600;font-size:.83rem}
+.era-tab[data-code="showa_early"]{color:#4848b8;font-weight:600;font-size:.83rem}
+.era-tab[data-code="showa_mid"]  {color:#5840c8;font-weight:700;font-size:.84rem}
+.era-tab[data-code="showa_late"] {color:#6838d8;font-weight:700;font-size:.84rem;text-shadow:0 0 8px rgba(104,56,216,.2)}
+.era-tab[data-code="heisei"]     {color:#7c40e8;font-weight:700;font-size:.85rem;text-shadow:0 0 10px rgba(124,64,232,.25)}
+.era-tab[data-code="gendai"]     {color:#6c63ff;font-weight:700;font-size:.86rem;text-shadow:0 0 12px rgba(108,99,255,.35)}
+
+.era-tab[data-code="geological"].active {border-bottom-color:#4a4540}
+.era-tab[data-code="paleolithic"].active{border-bottom-color:#5c5248}
+.era-tab[data-code="jomon"].active      {border-bottom-color:#6a5e52}
+.era-tab[data-code="yayoi"].active      {border-bottom-color:#7a6e58}
+.era-tab[data-code="kofun"].active      {border-bottom-color:#8a7a54}
+.era-tab[data-code="nara"].active       {border-bottom-color:#9a8838}
+.era-tab[data-code="heian"].active      {border-bottom-color:#8a8030}
+.era-tab[data-code="kamakura"].active   {border-bottom-color:#5a7838}
+.era-tab[data-code="muromachi"].active  {border-bottom-color:#387858}
+.era-tab[data-code="edo"].active        {border-bottom-color:#287878}
+.era-tab[data-code="meiji"].active      {border-bottom-color:#286890}
+.era-tab[data-code="taisho"].active     {border-bottom-color:#3858a8}
+.era-tab[data-code="showa_early"].active{border-bottom-color:#4848b8}
+.era-tab[data-code="showa_mid"].active  {border-bottom-color:#5840c8}
+.era-tab[data-code="showa_late"].active {border-bottom-color:#6838d8}
+.era-tab[data-code="heisei"].active     {border-bottom-color:#7c40e8}
+.era-tab[data-code="gendai"].active     {border-bottom-color:#6c63ff}
 
 /* 時代メタ情報 */
 .era-meta{background:var(--white);border-bottom:2px solid var(--border);padding:.75rem 1.5rem;box-shadow:0 2px 6px rgba(0,0,0,.04)}
@@ -120,8 +157,26 @@ header>*{position:relative;z-index:2}
 .donut-pct{font-size:.85rem;font-weight:700;color:var(--text)}
 .donut-sub{font-size:.55rem;color:var(--muted)}
 .stat-speed{display:flex;flex-direction:column;gap:.3rem;align-items:center}
-.speed-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:#4a5568;line-height:1.2;text-align:center}
+.speed-val{font-family:var(--serif);line-height:1.2;text-align:center;transition:color .2s,font-size .2s,text-shadow .2s}
 .speed-desc{font-size:.68rem;color:var(--muted);line-height:1.4;max-width:160px;text-align:center}
+
+/* 技術進化スピード — 時代別カラー（暗→明） */
+.speed-val[data-code="paleolithic"]{color:#5c5248;font-size:.72rem;font-weight:400}
+.speed-val[data-code="jomon"]      {color:#6a5e52;font-size:.75rem;font-weight:400}
+.speed-val[data-code="yayoi"]      {color:#7a6e58;font-size:.78rem;font-weight:400}
+.speed-val[data-code="kofun"]      {color:#8a7a54;font-size:.80rem;font-weight:500}
+.speed-val[data-code="nara"]       {color:#9a8838;font-size:.82rem;font-weight:500}
+.speed-val[data-code="heian"]      {color:#8a8030;font-size:.85rem;font-weight:500}
+.speed-val[data-code="kamakura"]   {color:#5a7838;font-size:.88rem;font-weight:500}
+.speed-val[data-code="muromachi"]  {color:#387858;font-size:.90rem;font-weight:500}
+.speed-val[data-code="edo"]        {color:#287878;font-size:.93rem;font-weight:600}
+.speed-val[data-code="meiji"]      {color:#286890;font-size:.96rem;font-weight:600}
+.speed-val[data-code="taisho"]     {color:#3858a8;font-size:1.00rem;font-weight:600}
+.speed-val[data-code="showa_early"]{color:#4848b8;font-size:1.04rem;font-weight:600}
+.speed-val[data-code="showa_mid"]  {color:#5840c8;font-size:1.08rem;font-weight:700}
+.speed-val[data-code="showa_late"] {color:#6838d8;font-size:1.13rem;font-weight:700;text-shadow:0 0 8px rgba(104,56,216,.25)}
+.speed-val[data-code="heisei"]     {color:#7c40e8;font-size:1.18rem;font-weight:700;text-shadow:0 0 10px rgba(124,64,232,.3)}
+.speed-val[data-code="gendai"]     {color:#6c63ff;font-size:1.25rem;font-weight:700;text-shadow:0 0 14px rgba(108,99,255,.4)}
 .stat-industry{display:flex;flex-direction:column;gap:.3rem;align-items:center}
 .industry-val{font-size:.9rem;font-weight:600;font-family:var(--serif);color:#4a5568;line-height:1.4;text-align:center}
 .stat-media{display:flex;flex-direction:column;gap:.3rem;align-items:center}
@@ -565,6 +620,7 @@ function buildEraTabs() {
   eras.forEach(e => {
     const btn = document.createElement('button');
     btn.className = 'era-tab';
+    btn.dataset.code = e.code;
     btn.textContent = e.name_ja;
     btn.onclick = () => selectEra(e);
     btn.id = 'era-tab-' + e.id;
@@ -760,7 +816,9 @@ function selectEra(era) {
     const animal = era.speed_animal;
     if (animal) {
       speedEl.style.display = 'flex';
-      document.getElementById('speed-val').textContent = animal;
+      const speedValEl = document.getElementById('speed-val');
+      speedValEl.textContent = animal;
+      speedValEl.dataset.code = era.code;
       document.getElementById('speed-desc').textContent = '';
     } else {
       speedEl.style.display = 'none';
