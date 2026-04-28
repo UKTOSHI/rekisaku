@@ -705,15 +705,15 @@ function selectEra(era) {
     kamakura:    BUNKA + '8=1',
     muromachi:   BUNKA + '10=1',
     edo:         BUNKA + '12=1',
-    meiji:       'https://www.nhk.or.jp/archives/kaisou/appliance/',
-    taisho:      'https://www.nhk.or.jp/archives/kaisou/appliance/',
+    meiji:       BUNKA + '13=1',
+    taisho:      BUNKA + '14=1',
     showa_early: 'https://www.nhk.or.jp/archives/kaisou/appliance/',
-    showa_mid:   BUNKA + '15=1',
+    showa_mid:   'https://www.nhk.or.jp/archives/kaisou/appliance/?year=60-70',
     showa_late:  BUNKA + '15=1',
   };
   const btnBunka = document.getElementById('btn-bunka');
   const meijiEras = new Set(['paleolithic','jomon','yayoi','kofun']);
-  const nodoguEras = new Set(['meiji','taisho','showa_early']);
+  const nodoguEras = new Set(['showa_early','showa_mid']);
   if (bunkaUrls[era.code]) {
     btnBunka.href = bunkaUrls[era.code];
     btnBunka.textContent = meijiEras.has(era.code) ? '🏛️ 明治大博物館' : nodoguEras.has(era.code) ? '📺 昔の道具' : '🏛️ 文化財オンライン';
