@@ -173,6 +173,18 @@ header>*{position:relative;z-index:2}
 
 footer{text-align:center;padding:2rem;font-size:.72rem;color:var(--muted);border-top:2px solid var(--border);margin-top:2rem;background:#fff}
 
+/* ── Event quick-access ── */
+.event-section{margin-bottom:1.25rem;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:0 2px 8px rgba(108,99,255,.06)}
+.event-section-title{padding:.65rem 1rem;font-size:.78rem;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--border);background:#fafbff}
+.event-groups{display:flex;flex-wrap:wrap}
+.event-group{flex:1 1 180px;padding:.75rem 1rem 1rem;border-right:1px solid var(--border)}
+.event-group:last-child{border-right:none}
+.event-group-label{font-size:.76rem;font-weight:700;color:#e8884a;letter-spacing:.04em;margin-bottom:.5rem}
+.event-links{list-style:none;display:flex;flex-direction:column;gap:.35rem}
+.event-links li a{font-size:.83rem;font-weight:500;color:var(--primary);text-decoration:none;display:inline-flex;align-items:center;gap:.35rem;transition:color .15s}
+.event-links li a::before{content:'→';font-size:.63rem;opacity:.55}
+.event-links li a:hover{color:#4a44cc;text-decoration:underline}
+
 @media(max-width:600px){
   .main{padding:1rem}
   .events-grid{grid-template-columns:1fr}
@@ -195,6 +207,28 @@ footer{text-align:center;padding:2rem;font-size:.72rem;color:var(--muted);border
 </nav>
 
 <main class="main">
+  <div class="event-section">
+    <div class="event-section-title">📅 イベント情報</div>
+    <div class="event-groups">
+      <div class="event-group">
+        <div class="event-group-label">🗼 東京</div>
+        <ul class="event-links">
+          <li><a href="https://www.enjoytokyo.jp/event/list/" target="_blank">レッツエンジョイ東京</a></li>
+          <li><a href="https://www.gotokyo.org/jp/index.html" target="_blank">GO TOKYO 公式</a></li>
+          <li><a href="https://www.walkerplus.com/top/ar0313/" target="_blank">ウォーカープラス 東京</a></li>
+        </ul>
+      </div>
+      <div class="event-group">
+        <div class="event-group-label">🏙️ 横浜</div>
+        <ul class="event-links">
+          <li><a href="https://www.welcome.city.yokohama.jp/eventinfo/?flg=MONTH" target="_blank">横浜観光情報 イベント</a></li>
+          <li><a href="https://www.hamakei.com/" target="_blank">はまれぽ.com</a></li>
+          <li><a href="https://rurubu.jp/andmore/area/1410005" target="_blank">るるぶ 横浜</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
   <div class="page-heading">首都圏イベント検索</div>
   <div class="page-sub">東京・横浜エリアで毎年開催される主なイベントを月・エリアで検索できます</div>
 
